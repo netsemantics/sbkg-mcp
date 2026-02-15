@@ -1,0 +1,31 @@
+[project]
+name = "sbkg-mcp"
+version = "0.1.0"
+description = "Second Brain Knowledge Graph MCP Server — stores notes, bookmarks, and relationships as RDF triples"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "mcp[cli]",
+    "pyoxigraph>=0.4",
+    "platformdirs>=4.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+sbkg-mcp = "sbkg_mcp.server:main"
+
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sbkg_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

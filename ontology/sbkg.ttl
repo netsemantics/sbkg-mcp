@@ -1,0 +1,124 @@
+@prefix sbkg: <http://secondbrain.ai/kg/> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# === Classes ===
+
+sbkg:Note a rdfs:Class ;
+    rdfs:label "Note" ;
+    rdfs:comment "A knowledge note in the second brain." .
+
+sbkg:DailyNote a rdfs:Class ;
+    rdfs:subClassOf sbkg:Note ;
+    rdfs:label "Daily Note" .
+
+sbkg:ProjectNote a rdfs:Class ;
+    rdfs:subClassOf sbkg:Note ;
+    rdfs:label "Project Note" .
+
+sbkg:AreaNote a rdfs:Class ;
+    rdfs:subClassOf sbkg:Note ;
+    rdfs:label "Area Note" .
+
+sbkg:ResourceNote a rdfs:Class ;
+    rdfs:subClassOf sbkg:Note ;
+    rdfs:label "Resource Note" .
+
+sbkg:FleetingNote a rdfs:Class ;
+    rdfs:subClassOf sbkg:Note ;
+    rdfs:label "Fleeting Note" .
+
+sbkg:Bookmark a rdfs:Class ;
+    rdfs:label "Bookmark" ;
+    rdfs:comment "A saved URL with metadata." .
+
+sbkg:Concept a rdfs:Class ;
+    rdfs:label "Concept" ;
+    rdfs:comment "A topic or tag representing a concept." .
+
+sbkg:Project a rdfs:Class ;
+    rdfs:label "Project" ;
+    rdfs:comment "A project grouping related notes." .
+
+sbkg:Area a rdfs:Class ;
+    rdfs:label "Area" ;
+    rdfs:comment "An area of responsibility or interest." .
+
+sbkg:Person a rdfs:Class ;
+    rdfs:label "Person" ;
+    rdfs:comment "A person referenced in the knowledge graph." .
+
+sbkg:Tool a rdfs:Class ;
+    rdfs:label "Tool" ;
+    rdfs:comment "A tool or software referenced in notes." .
+
+# === Properties ===
+
+sbkg:title a rdf:Property ;
+    rdfs:domain sbkg:Note ;
+    rdfs:range xsd:string ;
+    rdfs:label "title" .
+
+sbkg:content a rdf:Property ;
+    rdfs:domain sbkg:Note ;
+    rdfs:range xsd:string ;
+    rdfs:label "content" .
+
+sbkg:hasTag a rdf:Property ;
+    rdfs:label "has tag" ;
+    rdfs:comment "Links an entity to a Concept (tag)." ;
+    rdfs:range sbkg:Concept .
+
+sbkg:linksTo a rdf:Property ;
+    rdfs:label "links to" ;
+    rdfs:comment "A directional link between notes (wikilink)." .
+
+sbkg:mentions a rdf:Property ;
+    rdfs:label "mentions" ;
+    rdfs:comment "A note mentions an entity." .
+
+sbkg:belongsToProject a rdf:Property ;
+    rdfs:domain sbkg:Note ;
+    rdfs:range sbkg:Project ;
+    rdfs:label "belongs to project" .
+
+sbkg:belongsToArea a rdf:Property ;
+    rdfs:domain sbkg:Note ;
+    rdfs:range sbkg:Area ;
+    rdfs:label "belongs to area" .
+
+sbkg:createdAt a rdf:Property ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "created at" .
+
+sbkg:modifiedAt a rdf:Property ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "modified at" .
+
+sbkg:hasStatus a rdf:Property ;
+    rdfs:label "has status" .
+
+sbkg:sourceUrl a rdf:Property ;
+    rdfs:domain sbkg:Bookmark ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "source URL" .
+
+sbkg:markdownPath a rdf:Property ;
+    rdfs:domain sbkg:Note ;
+    rdfs:range xsd:string ;
+    rdfs:label "markdown path" .
+
+# === Bookmark Statuses ===
+
+sbkg:ToRead a sbkg:Concept ;
+    rdfs:label "To Read" .
+
+sbkg:Reading a sbkg:Concept ;
+    rdfs:label "Reading" .
+
+sbkg:Read a sbkg:Concept ;
+    rdfs:label "Read" .
+
+sbkg:Reference a sbkg:Concept ;
+    rdfs:label "Reference" .
