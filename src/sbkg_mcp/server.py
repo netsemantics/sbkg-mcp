@@ -387,6 +387,113 @@ def sbkg_get_ontology(format: str = "summary") -> str:
 
 
 # ---------------------------------------------------------------------------
+# Tool 11: sbkg_delete_note
+# ---------------------------------------------------------------------------
+@mcp.tool()
+def sbkg_delete_note(title: str) -> str:
+    """
+    Delete a note and all its triples from the knowledge graph.
+
+    Args:
+        title: The title of the note to delete
+
+    Returns:
+        str: JSON with deletion status and triple count removed
+    """
+    store = _get_store()
+    slug = slugify(title)
+    note_uri = NamedNode(make_note_uri(slug))
+
+    # Remove triples where note is subject
+    removed_as_subject = store.remove_triples(subject=note_uri)
+    # Remove triples where note is object (incoming links)
+    removed_as_object = store.remove_triples(obj=note_uri)
+
+    total = removed_as_subject + removed_as_object
+    if total == 0:
+        return json.dumps({
+            "deleted": False,
+            "uri": make_note_uri(slug),
+            "message": f"No note found with title '{title}'",
+        })
+    return json.dumps({
+        "deleted": True,
+        "uri": make_note_uri(slug),
+        "triples_removed": total,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Tool 12: sbkg_delete_bookmark
+# ---------------------------------------------------------------------------
+@mcp.tool()
+def sbkg_delete_bookmark(title: str) -> str:
+    """
+    Delete a bookmark and all its triples from the knowledge graph.
+
+    Args:
+        title: The title of the bookmark to delete
+
+    Returns:
+        str: JSON with deletion status and triple count removed
+    """
+    store = _get_store()
+    slug = slugify(title)
+    bm_uri = NamedNode(make_bookmark_uri(slug))
+
+    removed_as_subject = store.remove_triples(subject=bm_uri)
+    removed_as_object = store.remove_triples(obj=bm_uri)
+
+    total = removed_as_subject + removed_as_object
+    if total == 0:
+        return json.dumps({
+            "deleted": False,
+            "uri": make_bookmark_uri(slug),
+            "message": f"No bookmark found with title '{title}'",
+        })
+    return json.dumps({
+        "deleted": True,
+        "uri": make_bookmark_uri(slug),
+        "triples_removed": total,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Tool 13: sbkg_clear_all
+# ---------------------------------------------------------------------------
+@mcp.tool()
+def sbkg_clear_all(confirm: bool = False) -> str:
+    """
+    Delete ALL triples from the knowledge graph, then reload the ontology.
+    Use this to reset after testing. Requires confirm=True as a safety check.
+
+    Args:
+        confirm: Must be True to proceed. Prevents accidental wipes.
+
+    Returns:
+        str: JSON with deletion status
+    """
+    if not confirm:
+        return json.dumps({
+            "cleared": False,
+            "message": "Safety check: pass confirm=True to wipe all data.",
+        })
+
+    store = _get_store()
+    before = store._count_triples()
+    # Remove everything
+    store.remove_triples()
+    # Reload ontology
+    store._ensure_ontology()
+    after = store._count_triples()
+    return json.dumps({
+        "cleared": True,
+        "triples_removed": before,
+        "ontology_triples_reloaded": after,
+    })
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 def main():

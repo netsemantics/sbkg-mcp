@@ -124,6 +124,68 @@ class TestImportTriples:
         assert result["triples_added"] >= 1
 
 
+class TestDeleteNote:
+    def test_delete_existing(self):
+        srv.sbkg_add_note("To Delete", tags=["temp"])
+        result = json.loads(srv.sbkg_delete_note("To Delete"))
+        assert result["deleted"] is True
+        assert result["triples_removed"] > 0
+        # Verify it's gone
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
+            "SELECT ?t WHERE { <http://secondbrain.ai/kg/note/to-delete> sbkg:title ?t }"
+        ))
+        assert len(sparql) == 0
+
+    def test_delete_nonexistent(self):
+        result = json.loads(srv.sbkg_delete_note("Does Not Exist"))
+        assert result["deleted"] is False
+
+    def test_delete_removes_incoming_links(self):
+        srv.sbkg_add_note("Source", links=["Target"])
+        srv.sbkg_add_note("Target")
+        result = json.loads(srv.sbkg_delete_note("Target"))
+        assert result["deleted"] is True
+        # The linksTo triple pointing to Target should also be gone
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
+            "SELECT ?o WHERE { <http://secondbrain.ai/kg/note/source> sbkg:linksTo ?o }"
+        ))
+        assert len(sparql) == 0
+
+
+class TestDeleteBookmark:
+    def test_delete_existing(self):
+        srv.sbkg_add_bookmark("Test BM", "https://example.com")
+        result = json.loads(srv.sbkg_delete_bookmark("Test BM"))
+        assert result["deleted"] is True
+        assert result["triples_removed"] > 0
+
+    def test_delete_nonexistent(self):
+        result = json.loads(srv.sbkg_delete_bookmark("Nope"))
+        assert result["deleted"] is False
+
+
+class TestClearAll:
+    def test_safety_check(self):
+        result = json.loads(srv.sbkg_clear_all(confirm=False))
+        assert result["cleared"] is False
+
+    def test_clear_and_reload_ontology(self):
+        srv.sbkg_add_note("Temp Note")
+        result = json.loads(srv.sbkg_clear_all(confirm=True))
+        assert result["cleared"] is True
+        assert result["triples_removed"] > 0
+        # Ontology should be reloaded
+        assert result["ontology_triples_reloaded"] > 0
+        # User data should be gone
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
+            "SELECT ?n WHERE { ?n a sbkg:Note }"
+        ))
+        assert len(sparql) == 0
+
+
 class TestGetOntology:
     def test_summary(self):
         result = json.loads(srv.sbkg_get_ontology(format="summary"))
