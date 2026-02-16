@@ -34,18 +34,23 @@ Add to your Claude Code MCP config:
 
 ## Tools
 
-| Tool | Description |
-|------|-------------|
-| `sbkg_add_note` | Create a note with metadata and triples |
-| `sbkg_add_bookmark` | Create a bookmark |
-| `sbkg_extract_from_markdown` | Parse a .md file into triples |
-| `sbkg_query_sparql` | Execute SPARQL queries |
-| `sbkg_query_natural` | Get ontology context for NL→SPARQL |
-| `sbkg_get_related_notes` | Find related notes |
-| `sbkg_get_stats` | Graph statistics |
-| `sbkg_export_triples` | Export to RDF formats |
-| `sbkg_import_triples` | Import from RDF files |
-| `sbkg_get_ontology` | Return ontology schema |
+| Function (tool)              | Purpose                                                                 | Key Parameters                                                                                                   |
+|------------------------------|-------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| sbkg_add_note                | Create a new note (markdown content) and add its triples.              | title (required), content, note_type, tags, links, project, area, status                                       |
+| sbkg_add_bookmark            | Create a new bookmark entry.                                           | title, url, description, tags, status                                                                           |
+| sbkg_extract_from_markdown  | Parse a local .md file and import its triples.                         | path                                                                                                            |
+| sbkg_query_sparql           | Run an arbitrary SPARQL query (SELECT/ASK/CONSTRUCT/DESCRIBE).         | sparql                                                                                                          |
+| sbkg_query_natural          | Get ontology context & guidance for turning a natural-language question into SPARQL. | question                                                                                                        |
+| sbkg_get_related_notes      | Find notes related to a given note via tags, links, project/area.      | title, max_results                                                                                              |
+| sbkg_get_stats              | Retrieve statistics about the graph (triple count, entity counts).     | (none)                                                                                                          |
+| sbkg_export_triples         | Export the whole graph (or a subset) in an RDF serialization.          | format (turtle, ntriples, nquads, trig, rdfxml), path (optional)                                               |
+| sbkg_import_triples         | Import RDF triples from a file into the graph.                         | path, format                                                                                                    |
+| sbkg_get_ontology           | Return the SBKG ontology definition.                                   | format (summary or turtle)                                                                                      |
+| sbkg_delete_note            | Delete a note (and all its triples).                                   | title                                                                                                           |
+| sbkg_delete_bookmark        | Delete a bookmark (and its triples).                                   | title                                                                                                           |
+| sbkg_clear_all              | Wipe all triples from the graph and reload the ontology (dangerous).   | confirm (must be true)                                                                                          |
+
+
 
 ## License
 
