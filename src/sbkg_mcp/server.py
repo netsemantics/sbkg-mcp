@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 from pyoxigraph import DefaultGraph, Literal, NamedNode, Quad
@@ -21,6 +22,13 @@ from .utils import (
 )
 
 mcp = FastMCP("sbkg")
+
+_GUIDE_PATH = Path(__file__).resolve().parent.parent.parent / "docs" / "llm-usage-guide.md"
+
+
+def _read_guide() -> str:
+    """Read the LLM usage guide markdown file."""
+    return _GUIDE_PATH.read_text(encoding="utf-8")
 
 _store: KnowledgeStore | None = None
 _RDF_TYPE = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
@@ -368,7 +376,67 @@ def sbkg_import_triples(path: str, format: str = "turtle") -> str:
 
 
 # ---------------------------------------------------------------------------
-# Tool 10: sbkg_get_ontology
+# Tool 10: sbkg_update_sparql
+# ---------------------------------------------------------------------------
+@mcp.tool()
+def sbkg_update_sparql(update: str) -> str:
+    """
+    Execute a SPARQL 1.1 UPDATE against the knowledge graph.
+
+    Supports INSERT DATA, DELETE DATA, DELETE/INSERT WHERE, and other
+    SPARQL Update operations. Updates are applied transactionally.
+
+    Use this for batch operations — e.g. inserting many triples at once,
+    bulk-tagging, or modifying existing data in place.
+
+    Args:
+        update: A SPARQL 1.1 Update string (INSERT DATA, DELETE DATA, etc.)
+
+    Returns:
+        str: JSON with execution status and triple count delta
+    """
+    store = _get_store()
+    before = store._count_triples()
+    store.sparql_update(update)
+    after = store._count_triples()
+    return json.dumps({
+        "success": True,
+        "triples_before": before,
+        "triples_after": after,
+        "triples_delta": after - before,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Tool 11: sbkg_bulk_import
+# ---------------------------------------------------------------------------
+@mcp.tool()
+def sbkg_bulk_import(data: str, format: str = "turtle") -> str:
+    """
+    Bulk-import RDF triples from an in-memory string.
+
+    Optimized for large payloads — streams data to disk without holding
+    all triples in memory. Use this instead of sbkg_import_triples when
+    the data is generated programmatically rather than read from a file.
+
+    Args:
+        data: RDF content as a string (Turtle, N-Triples, etc.)
+        format: RDF format — turtle, ntriples, nquads, trig, rdfxml
+
+    Returns:
+        str: JSON with import status and approximate triple count added
+    """
+    store = _get_store()
+    count = store.bulk_load_string(data=data, fmt=format)
+    return json.dumps({
+        "success": True,
+        "format": format,
+        "triples_added": count,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Tool 12: sbkg_get_ontology (was 10)
 # ---------------------------------------------------------------------------
 @mcp.tool()
 def sbkg_get_ontology(format: str = "summary") -> str:
@@ -387,7 +455,7 @@ def sbkg_get_ontology(format: str = "summary") -> str:
 
 
 # ---------------------------------------------------------------------------
-# Tool 11: sbkg_delete_note
+# Tool 13: sbkg_delete_note
 # ---------------------------------------------------------------------------
 @mcp.tool()
 def sbkg_delete_note(title: str) -> str:
@@ -424,7 +492,7 @@ def sbkg_delete_note(title: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Tool 12: sbkg_delete_bookmark
+# Tool 14: sbkg_delete_bookmark
 # ---------------------------------------------------------------------------
 @mcp.tool()
 def sbkg_delete_bookmark(title: str) -> str:
@@ -459,7 +527,7 @@ def sbkg_delete_bookmark(title: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Tool 13: sbkg_clear_all
+# Tool 15: sbkg_clear_all
 # ---------------------------------------------------------------------------
 @mcp.tool()
 def sbkg_clear_all(confirm: bool = False) -> str:
@@ -491,6 +559,41 @@ def sbkg_clear_all(confirm: bool = False) -> str:
         "triples_removed": before,
         "ontology_triples_reloaded": after,
     })
+
+
+# ---------------------------------------------------------------------------
+# Resource: LLM Usage Guide
+# ---------------------------------------------------------------------------
+@mcp.resource(
+    "sbkg://guide/llm-usage",
+    name="llm-usage-guide",
+    title="SBKG LLM Usage Guide",
+    description="Comprehensive guide for LLMs on how to use the SBKG MCP tools, "
+                "data model, SPARQL patterns, and best practices.",
+    mime_type="text/markdown",
+)
+def llm_usage_guide() -> str:
+    """Return the LLM usage guide as a markdown resource."""
+    return _read_guide()
+
+
+# ---------------------------------------------------------------------------
+# Tool 16: sbkg_usage_guide
+# ---------------------------------------------------------------------------
+@mcp.tool()
+def sbkg_usage_guide() -> str:
+    """
+    Load the SBKG usage guide for LLMs.
+
+    Call this tool at the start of a session or whenever you need guidance on
+    how to use the SBKG tools effectively. Returns a comprehensive markdown
+    document covering the data model, tool selection, SPARQL patterns, and
+    best practices.
+
+    Returns:
+        str: Markdown content of the LLM usage guide
+    """
+    return _read_guide()
 
 
 # ---------------------------------------------------------------------------

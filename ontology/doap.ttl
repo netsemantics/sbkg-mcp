@@ -1,0 +1,165 @@
+@prefix doap:  <http://usefulinc.com/ns/doap#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
+
+# === DOAP — Description of a Project ===
+# Lightweight vocabulary for describing software projects.
+# Full spec: https://github.com/ewilderj/doap/wiki
+
+# --- Core classes ---
+
+doap:Project a rdfs:Class ;
+    rdfs:label "Project" ;
+    rdfs:comment "A software project." .
+
+doap:Repository a rdfs:Class ;
+    rdfs:label "Repository" ;
+    rdfs:comment "Source code repository." .
+
+doap:GitRepository a rdfs:Class ;
+    rdfs:subClassOf doap:Repository ;
+    rdfs:label "Git Repository" .
+
+doap:Version a rdfs:Class ;
+    rdfs:label "Version" ;
+    rdfs:comment "Version information of a project release." .
+
+doap:Specification a rdfs:Class ;
+    rdfs:label "Specification" ;
+    rdfs:comment "A specification that a project implements or follows." .
+
+# --- Project properties ---
+
+doap:name a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:string ;
+    rdfs:label "name" ;
+    rdfs:comment "A name of something." .
+
+doap:description a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:string ;
+    rdfs:label "description" .
+
+doap:shortdesc a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:string ;
+    rdfs:label "short description" ;
+    rdfs:comment "Short (one-line) plain text description of a project." .
+
+doap:homepage a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "homepage" .
+
+doap:created a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:date ;
+    rdfs:label "created" ;
+    rdfs:comment "Date when something was created, in YYYY-MM-DD form." .
+
+# --- Code & build ---
+
+doap:repository a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range doap:Repository ;
+    rdfs:label "repository" .
+
+doap:programming-language a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:string ;
+    rdfs:label "programming language" .
+
+doap:platform a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:string ;
+    rdfs:label "platform" ;
+    rdfs:comment "Indicator of software platform (non-OS specific), e.g. Java, CLI." .
+
+doap:os a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:string ;
+    rdfs:label "operating system" .
+
+doap:license a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:label "license" .
+
+# --- Releases ---
+
+doap:release a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range doap:Version ;
+    rdfs:label "release" .
+
+doap:revision a rdf:Property ;
+    rdfs:domain doap:Version ;
+    rdfs:range xsd:string ;
+    rdfs:label "revision" ;
+    rdfs:comment "Revision identifier of a software release." .
+
+# --- People ---
+
+doap:maintainer a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range foaf:Person ;
+    rdfs:label "maintainer" .
+
+doap:developer a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range foaf:Person ;
+    rdfs:label "developer" .
+
+# --- Tracking ---
+
+doap:bug-database a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "bug database" ;
+    rdfs:comment "Bug tracker for a project." .
+
+doap:download-page a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "download page" .
+
+doap:implements a rdf:Property ;
+    rdfs:domain doap:Project ;
+    rdfs:range doap:Specification ;
+    rdfs:label "implements" ;
+    rdfs:comment "A specification that a project implements." .
+
+# --- Repository properties ---
+
+doap:location a rdf:Property ;
+    rdfs:domain doap:Repository ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "repository location" .
+
+doap:browse a rdf:Property ;
+    rdfs:domain doap:Repository ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "browse" ;
+    rdfs:comment "Web-browsable interface to the repository." .
+
+# --- Minimal FOAF for people ---
+
+foaf:Person a rdfs:Class ;
+    rdfs:label "Person" .
+
+foaf:name a rdf:Property ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:string ;
+    rdfs:label "name" .
+
+foaf:mbox a rdf:Property ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "email" .
+
+foaf:homepage a rdf:Property ;
+    rdfs:domain foaf:Person ;
+    rdfs:range xsd:anyURI ;
+    rdfs:label "homepage" .

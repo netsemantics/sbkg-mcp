@@ -1,7 +1,10 @@
-@prefix sbkg: <http://secondbrain.ai/kg/> .
-@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sbkg:    <http://secondbrain.ai/kg/> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix doap:    <http://usefulinc.com/ns/doap#> .
 
 # === Classes ===
 
@@ -34,12 +37,13 @@ sbkg:Bookmark a rdfs:Class ;
     rdfs:comment "A saved URL with metadata." .
 
 sbkg:Concept a rdfs:Class ;
+    rdfs:subClassOf skos:Concept ;
     rdfs:label "Concept" ;
-    rdfs:comment "A topic or tag representing a concept." .
+    rdfs:comment "A topic or tag representing a concept. Aligned with SKOS Concept for hierarchy support." .
 
 sbkg:Project a rdfs:Class ;
     rdfs:label "Project" ;
-    rdfs:comment "A project grouping related notes." .
+    rdfs:comment "A project grouping related notes. For software projects, use doap:Project properties." .
 
 sbkg:Area a rdfs:Class ;
     rdfs:label "Area" ;
@@ -47,7 +51,7 @@ sbkg:Area a rdfs:Class ;
 
 sbkg:Person a rdfs:Class ;
     rdfs:label "Person" ;
-    rdfs:comment "A person referenced in the knowledge graph." .
+    rdfs:comment "A person referenced in the knowledge graph. Compatible with foaf:Person from DOAP." .
 
 sbkg:Tool a rdfs:Class ;
     rdfs:label "Tool" ;

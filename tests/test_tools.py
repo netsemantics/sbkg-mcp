@@ -186,6 +186,102 @@ class TestClearAll:
         assert len(sparql) == 0
 
 
+class TestUpdateSparql:
+    _BM = "http://secondbrain.ai/kg/bookmark/"
+    _NS = "http://secondbrain.ai/kg/"
+
+    def test_insert_data(self):
+        result = json.loads(srv.sbkg_update_sparql(
+            f'INSERT DATA {{ '
+            f'  <{self._BM}test-a> a <{self._NS}Bookmark> ; <{self._NS}title> "A" ; <{self._NS}sourceUrl> "https://a.com" . '
+            f'  <{self._BM}test-b> a <{self._NS}Bookmark> ; <{self._NS}title> "B" ; <{self._NS}sourceUrl> "https://b.com" . '
+            f'}}'
+        ))
+        assert result["success"] is True
+        assert result["triples_delta"] == 6
+        # Verify both bookmarks exist
+        rows = json.loads(srv.sbkg_query_sparql(
+            'PREFIX sbkg: <http://secondbrain.ai/kg/> '
+            'SELECT ?title WHERE { ?b a sbkg:Bookmark . ?b sbkg:title ?title } ORDER BY ?title'
+        ))
+        titles = [r["title"] for r in rows]
+        assert "A" in titles
+        assert "B" in titles
+
+    def test_delete_data(self):
+        # Insert then delete
+        srv.sbkg_update_sparql(
+            f'INSERT DATA {{ <{self._BM}gone> a <{self._NS}Bookmark> ; <{self._NS}title> "Gone" . }}'
+        )
+        result = json.loads(srv.sbkg_update_sparql(
+            f'DELETE DATA {{ <{self._BM}gone> a <{self._NS}Bookmark> ; <{self._NS}title> "Gone" . }}'
+        ))
+        assert result["success"] is True
+        assert result["triples_delta"] == -2
+
+    def test_delete_insert_where(self):
+        # Insert, then rename via DELETE/INSERT WHERE
+        srv.sbkg_update_sparql(
+            f'INSERT DATA {{ <{self._BM}rename> a <{self._NS}Bookmark> ; <{self._NS}title> "Old Name" . }}'
+        )
+        srv.sbkg_update_sparql(
+            f'DELETE {{ <{self._BM}rename> <{self._NS}title> "Old Name" }} '
+            f'INSERT {{ <{self._BM}rename> <{self._NS}title> "New Name" }} '
+            f'WHERE {{ <{self._BM}rename> <{self._NS}title> "Old Name" }}'
+        )
+        rows = json.loads(srv.sbkg_query_sparql(
+            f'SELECT ?title WHERE {{ <{self._BM}rename> <{self._NS}title> ?title }}'
+        ))
+        assert rows[0]["title"] == "New Name"
+
+
+class TestBulkImport:
+    def test_turtle_string(self):
+        ttl = (
+            '<http://secondbrain.ai/kg/bookmark/bulk-a> a <http://secondbrain.ai/kg/Bookmark> ;\n'
+            '  <http://secondbrain.ai/kg/title> "Bulk A" ;\n'
+            '  <http://secondbrain.ai/kg/sourceUrl> "https://a.com" .\n'
+            '<http://secondbrain.ai/kg/bookmark/bulk-b> a <http://secondbrain.ai/kg/Bookmark> ;\n'
+            '  <http://secondbrain.ai/kg/title> "Bulk B" ;\n'
+            '  <http://secondbrain.ai/kg/sourceUrl> "https://b.com" .\n'
+            '<http://secondbrain.ai/kg/bookmark/bulk-c> a <http://secondbrain.ai/kg/Bookmark> ;\n'
+            '  <http://secondbrain.ai/kg/title> "Bulk C" ;\n'
+            '  <http://secondbrain.ai/kg/sourceUrl> "https://c.com" .\n'
+        )
+        result = json.loads(srv.sbkg_bulk_import(data=ttl, format="turtle"))
+        assert result["success"] is True
+        assert result["triples_added"] == 9  # 3 bookmarks x 3 triples each
+        # Verify all three exist
+        rows = json.loads(srv.sbkg_query_sparql(
+            'PREFIX sbkg: <http://secondbrain.ai/kg/> '
+            'SELECT ?title WHERE { ?b a sbkg:Bookmark . ?b sbkg:title ?title } ORDER BY ?title'
+        ))
+        titles = [r["title"] for r in rows]
+        assert titles == ["Bulk A", "Bulk B", "Bulk C"]
+
+    def test_ntriples_string(self):
+        nt = (
+            '<http://secondbrain.ai/kg/bookmark/nt-test> '
+            '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> '
+            '<http://secondbrain.ai/kg/Bookmark> .\n'
+            '<http://secondbrain.ai/kg/bookmark/nt-test> '
+            '<http://secondbrain.ai/kg/title> '
+            '"NT Test" .\n'
+        )
+        result = json.loads(srv.sbkg_bulk_import(data=nt, format="ntriples"))
+        assert result["success"] is True
+        assert result["triples_added"] == 2
+
+
+class TestUsageGuide:
+    def test_returns_markdown(self):
+        result = srv.sbkg_usage_guide()
+        assert "# SBKG MCP" in result
+        assert "sbkg_query_sparql" in result
+        assert "sbkg_bulk_import" in result
+        assert "sbkg_update_sparql" in result
+
+
 class TestGetOntology:
     def test_summary(self):
         result = json.loads(srv.sbkg_get_ontology(format="summary"))

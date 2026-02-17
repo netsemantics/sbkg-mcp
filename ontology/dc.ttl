@@ -1,0 +1,99 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix dc:      <http://purl.org/dc/elements/1.1/> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+# === Dublin Core Terms Subset ===
+# Standard metadata vocabulary for resources.
+# Full spec: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/
+
+# --- Content description ---
+
+dcterms:title a rdf:Property ;
+    rdfs:label "title" ;
+    rdfs:comment "A name given to the resource." ;
+    rdfs:range xsd:string .
+
+dcterms:description a rdf:Property ;
+    rdfs:label "description" ;
+    rdfs:comment "An account of the resource (abstract, summary, etc.)." ;
+    rdfs:range xsd:string .
+
+dcterms:subject a rdf:Property ;
+    rdfs:label "subject" ;
+    rdfs:comment "The topic of the resource." .
+
+dcterms:type a rdf:Property ;
+    rdfs:label "type" ;
+    rdfs:comment "The nature or genre of the resource." .
+
+# --- Provenance ---
+
+dcterms:creator a rdf:Property ;
+    rdfs:label "creator" ;
+    rdfs:comment "An entity primarily responsible for making the resource." .
+
+dcterms:contributor a rdf:Property ;
+    rdfs:label "contributor" ;
+    rdfs:comment "An entity responsible for making contributions to the resource." .
+
+dcterms:publisher a rdf:Property ;
+    rdfs:label "publisher" ;
+    rdfs:comment "An entity responsible for making the resource available." .
+
+dcterms:source a rdf:Property ;
+    rdfs:label "source" ;
+    rdfs:comment "A related resource from which the described resource is derived." .
+
+# --- Dates ---
+
+dcterms:created a rdf:Property ;
+    rdfs:label "date created" ;
+    rdfs:comment "Date of creation of the resource." ;
+    rdfs:range xsd:dateTime .
+
+dcterms:modified a rdf:Property ;
+    rdfs:label "date modified" ;
+    rdfs:comment "Date on which the resource was last changed." ;
+    rdfs:range xsd:dateTime .
+
+dcterms:issued a rdf:Property ;
+    rdfs:label "date issued" ;
+    rdfs:comment "Date of formal issuance (publication) of the resource." ;
+    rdfs:range xsd:dateTime .
+
+# --- Rights & format ---
+
+dcterms:license a rdf:Property ;
+    rdfs:label "license" ;
+    rdfs:comment "A legal document giving permission to use the resource." .
+
+dcterms:format a rdf:Property ;
+    rdfs:label "format" ;
+    rdfs:comment "The file format, physical medium, or dimensions of the resource." ;
+    rdfs:range xsd:string .
+
+dcterms:language a rdf:Property ;
+    rdfs:label "language" ;
+    rdfs:comment "The language of the resource." ;
+    rdfs:range xsd:string .
+
+# --- Relations ---
+
+dcterms:isPartOf a rdf:Property ;
+    rdfs:label "is part of" ;
+    rdfs:comment "A related resource in which the described resource is part of." .
+
+dcterms:hasPart a rdf:Property ;
+    rdfs:label "has part" ;
+    rdfs:comment "A related resource that is included in the described resource." .
+
+dcterms:references a rdf:Property ;
+    rdfs:label "references" ;
+    rdfs:comment "A related resource that is referenced by the described resource." .
+
+dcterms:identifier a rdf:Property ;
+    rdfs:label "identifier" ;
+    rdfs:comment "An unambiguous reference to the resource within a given context." ;
+    rdfs:range xsd:string .

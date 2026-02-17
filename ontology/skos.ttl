@@ -1,0 +1,74 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# === SKOS Core Subset ===
+# Lightweight concept scheme vocabulary for tag hierarchies.
+# Full spec: https://www.w3.org/TR/skos-reference/
+
+skos:ConceptScheme a rdfs:Class ;
+    rdfs:label "Concept Scheme" ;
+    rdfs:comment "A set of concepts, optionally including relationships between them." .
+
+skos:Concept a rdfs:Class ;
+    rdfs:label "Concept" ;
+    rdfs:comment "An abstract idea or notion; a unit of thought." .
+
+# --- Labeling ---
+
+skos:prefLabel a rdf:Property ;
+    rdfs:label "preferred label" ;
+    rdfs:comment "The preferred lexical label for a concept (one per language)." ;
+    rdfs:range xsd:string .
+
+skos:altLabel a rdf:Property ;
+    rdfs:label "alternative label" ;
+    rdfs:comment "An alternative lexical label (synonyms, abbreviations)." ;
+    rdfs:range xsd:string .
+
+# --- Hierarchy ---
+
+skos:broader a rdf:Property ;
+    rdfs:label "has broader" ;
+    rdfs:comment "Relates a concept to a more general concept." ;
+    rdfs:domain skos:Concept ;
+    rdfs:range skos:Concept .
+
+skos:narrower a rdf:Property ;
+    rdfs:label "has narrower" ;
+    rdfs:comment "Relates a concept to a more specific concept." ;
+    rdfs:domain skos:Concept ;
+    rdfs:range skos:Concept .
+
+skos:related a rdf:Property ;
+    rdfs:label "has related" ;
+    rdfs:comment "Relates two concepts that are associatively linked but not hierarchically." ;
+    rdfs:domain skos:Concept ;
+    rdfs:range skos:Concept .
+
+# --- Scheme membership ---
+
+skos:inScheme a rdf:Property ;
+    rdfs:label "is in scheme" ;
+    rdfs:comment "Relates a concept to the scheme it belongs to." ;
+    rdfs:domain skos:Concept ;
+    rdfs:range skos:ConceptScheme .
+
+skos:hasTopConcept a rdf:Property ;
+    rdfs:label "has top concept" ;
+    rdfs:comment "Relates a scheme to a top-level concept within it." ;
+    rdfs:domain skos:ConceptScheme ;
+    rdfs:range skos:Concept .
+
+# --- Documentation ---
+
+skos:definition a rdf:Property ;
+    rdfs:label "definition" ;
+    rdfs:comment "A formal explanation of the meaning of a concept." ;
+    rdfs:range xsd:string .
+
+skos:note a rdf:Property ;
+    rdfs:label "note" ;
+    rdfs:comment "A general note about a concept." ;
+    rdfs:range xsd:string .

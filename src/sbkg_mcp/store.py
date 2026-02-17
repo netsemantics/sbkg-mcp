@@ -14,7 +14,7 @@ from pyoxigraph import (
     Store,
 )
 
-from .ontology import get_ontology_turtle
+from .ontology import get_all_ontology_paths
 from .paths import get_db_path
 from .utils import SBKG_NS
 
@@ -51,14 +51,15 @@ class KnowledgeStore:
         self._ensure_ontology()
 
     def _ensure_ontology(self) -> None:
-        """Load ontology if the store is empty."""
+        """Load all ontology .ttl files if the store is empty."""
         # Check if ontology classes are present
         results = list(self._store.quads_for_pattern(
             NamedNode(f"{SBKG_NS}Note"), _RDF_TYPE, None, None
         ))
         if not results:
-            ttl = get_ontology_turtle()
-            self._store.load(ttl, format=RdfFormat.TURTLE)
+            for path in get_all_ontology_paths():
+                ttl = path.read_text(encoding="utf-8")
+                self._store.load(ttl, format=RdfFormat.TURTLE)
 
     def insert_triples(self, quads: list[Quad]) -> int:
         """Batch insert quads. Returns number inserted."""
@@ -148,6 +149,18 @@ class KnowledgeStore:
         self._store.load(path=path, format=rdf_format)
         after = self._count_triples()
         return after - before
+
+    def bulk_load_string(self, data: str, fmt: str = "turtle") -> int:
+        """Bulk-load RDF from an in-memory string. Returns approximate count added."""
+        rdf_format = _resolve_format(fmt)
+        before = self._count_triples()
+        self._store.bulk_load(input=data, format=rdf_format)
+        after = self._count_triples()
+        return after - before
+
+    def sparql_update(self, update: str) -> None:
+        """Execute a SPARQL 1.1 UPDATE (INSERT DATA, DELETE DATA, DELETE/INSERT WHERE, etc.)."""
+        self._store.update(update)
 
     def get_stats(self) -> dict:
         """Return graph statistics: triple count, entity counts by type."""
