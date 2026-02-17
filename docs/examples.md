@@ -24,13 +24,13 @@ Extended examples of using sbkg-mcp, including multi-MCP server workflows.
 ### Add a note with tags and project
 
 ```
-User: Create a note about our decision to use Enphase IQ8 microinverters.
+User: Create a note about our decision to use PostgreSQL for the backend.
 
 LLM calls: sbkg_add_note(
-  title="Decision: Enphase IQ8 Microinverters",
-  content="Chose IQ8+ for the south-facing array. Key factors: ...",
-  tags=["solar", "enphase", "decisions"],
-  project="home-solar",
+  title="Decision: PostgreSQL for Backend DB",
+  content="Chose PostgreSQL over MySQL. Key factors: JSONB support, ...",
+  tags=["database", "postgresql", "decisions"],
+  project="webapp-v2",
   note_type="ProjectNote"
 )
 ```
@@ -38,13 +38,13 @@ LLM calls: sbkg_add_note(
 ### Add a bookmark with reading status
 
 ```
-User: Save this article for later — https://example.com/grid-tied-vs-hybrid
+User: Save this article for later — https://example.com/microservices-patterns
 
 LLM calls: sbkg_add_bookmark(
-  title="Grid-Tied vs Hybrid Solar Systems",
-  url="https://example.com/grid-tied-vs-hybrid",
-  description="Comparison of grid-tied and hybrid solar architectures",
-  tags=["solar", "grid-tied", "battery"],
+  title="Microservices Patterns",
+  url="https://example.com/microservices-patterns",
+  description="Overview of common microservice architecture patterns",
+  tags=["architecture", "microservices", "backend"],
   status="ToRead"
 )
 ```
@@ -52,20 +52,20 @@ LLM calls: sbkg_add_bookmark(
 ### Mark a bookmark as read
 
 ```
-User: I finished reading the grid-tied article.
+User: I finished reading the microservices article.
 
 LLM calls: sbkg_update_sparql("""
   PREFIX sbkg: <http://secondbrain.ai/kg/>
   DELETE {
-    <http://secondbrain.ai/kg/bookmark/grid-tied-vs-hybrid-solar-systems>
+    <http://secondbrain.ai/kg/bookmark/microservices-patterns>
       sbkg:hasStatus ?oldStatus .
   }
   INSERT {
-    <http://secondbrain.ai/kg/bookmark/grid-tied-vs-hybrid-solar-systems>
+    <http://secondbrain.ai/kg/bookmark/microservices-patterns>
       sbkg:hasStatus sbkg:Read .
   }
   WHERE {
-    <http://secondbrain.ai/kg/bookmark/grid-tied-vs-hybrid-solar-systems>
+    <http://secondbrain.ai/kg/bookmark/microservices-patterns>
       sbkg:hasStatus ?oldStatus .
   }
 """)
@@ -74,10 +74,10 @@ LLM calls: sbkg_update_sparql("""
 ### Import a markdown file
 
 ```
-User: I have meeting notes at ~/notes/solar-meeting-2026-02-10.md — add them.
+User: I have meeting notes at ~/notes/sprint-review-2026-02-10.md — add them.
 
 LLM calls: sbkg_extract_from_markdown(
-  path="/Users/kirby/notes/solar-meeting-2026-02-10.md"
+  path="/home/user/notes/sprint-review-2026-02-10.md"
 )
 ```
 
@@ -85,16 +85,16 @@ The markdown file should have YAML frontmatter:
 
 ```markdown
 ---
-title: Solar Meeting Notes - Feb 10
-tags: [solar, meeting, forsyth-county]
-project: home-solar
+title: Sprint Review - Feb 10
+tags: [sprint, review, webapp-v2]
+project: webapp-v2
 type: ProjectNote
 ---
 
-Discussed permit timeline with inspector. Key points:
-- Electrical permit approved
-- Need to schedule rough-in inspection
-- See [[Enphase Ensemble Planning Guide]] for panel layout
+Discussed deployment timeline with the team. Key points:
+- Auth service ready for staging
+- Need to finalize API rate limiting
+- See [[PostgreSQL Tuning Guide]] for query optimization
 ```
 
 Wikilinks (`[[...]]`) are automatically extracted as `sbkg:linksTo` relationships.
@@ -122,7 +122,7 @@ PREFIX sbkg: <http://secondbrain.ai/kg/>
 SELECT ?title ?created WHERE {
   ?n a sbkg:Note .
   ?n sbkg:belongsToProject ?proj .
-  ?proj sbkg:title "home-solar" .
+  ?proj sbkg:title "webapp-v2" .
   ?n sbkg:title ?title .
   ?n sbkg:createdAt ?created .
 }
@@ -140,8 +140,8 @@ SELECT ?title ?type WHERE {
   ?item sbkg:title ?title .
   OPTIONAL { ?item sbkg:content ?content }
   FILTER(
-    CONTAINS(LCASE(?title), "permit") ||
-    CONTAINS(LCASE(COALESCE(?content, "")), "permit")
+    CONTAINS(LCASE(?title), "deployment") ||
+    CONTAINS(LCASE(COALESCE(?content, "")), "deployment")
   )
 }
 ```
@@ -228,11 +228,11 @@ LLM calls: sbkg_update_sparql("""
 ```
 LLM calls: sbkg_update_sparql("""
   PREFIX sbkg: <http://secondbrain.ai/kg/>
-  INSERT { ?b sbkg:hasTag <http://secondbrain.ai/kg/concept/enphase> }
+  INSERT { ?b sbkg:hasTag <http://secondbrain.ai/kg/concept/devops> }
   WHERE {
     ?b a sbkg:Bookmark .
     ?b sbkg:title ?title .
-    FILTER(CONTAINS(LCASE(?title), "enphase"))
+    FILTER(CONTAINS(LCASE(?title), "kubernetes") || CONTAINS(LCASE(?title), "docker"))
   }
 """)
 ```
@@ -248,40 +248,39 @@ LLM calls: sbkg_update_sparql("""
   PREFIX sbkg: <http://secondbrain.ai/kg/>
   PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   INSERT DATA {
-    <http://secondbrain.ai/kg/concept/renewable-energy> a sbkg:Concept ;
-      sbkg:title "renewable-energy" ;
-      skos:prefLabel "Renewable Energy" .
+    <http://secondbrain.ai/kg/concept/programming> a sbkg:Concept ;
+      sbkg:title "programming" ;
+      skos:prefLabel "Programming" .
 
-    <http://secondbrain.ai/kg/concept/solar>
-      skos:broader <http://secondbrain.ai/kg/concept/renewable-energy> ;
-      skos:prefLabel "Solar" .
+    <http://secondbrain.ai/kg/concept/frontend>
+      skos:broader <http://secondbrain.ai/kg/concept/programming> ;
+      skos:prefLabel "Frontend" .
 
-    <http://secondbrain.ai/kg/concept/enphase>
-      skos:broader <http://secondbrain.ai/kg/concept/solar> ;
-      skos:prefLabel "Enphase" .
+    <http://secondbrain.ai/kg/concept/react>
+      skos:broader <http://secondbrain.ai/kg/concept/frontend> ;
+      skos:prefLabel "React" .
 
-    <http://secondbrain.ai/kg/concept/solar-thermal>
-      skos:broader <http://secondbrain.ai/kg/concept/solar> ;
-      skos:prefLabel "Solar Thermal" .
+    <http://secondbrain.ai/kg/concept/vue>
+      skos:broader <http://secondbrain.ai/kg/concept/frontend> ;
+      skos:prefLabel "Vue" .
 
-    <http://secondbrain.ai/kg/concept/gshp>
-      skos:broader <http://secondbrain.ai/kg/concept/renewable-energy> ;
-      skos:prefLabel "Ground Source Heat Pump" ;
-      skos:altLabel "GSHP" ;
-      skos:altLabel "geothermal" .
+    <http://secondbrain.ai/kg/concept/backend>
+      skos:broader <http://secondbrain.ai/kg/concept/programming> ;
+      skos:prefLabel "Backend" ;
+      skos:altLabel "server-side" .
   }
 """)
 ```
 
 ### Query entire subtree
 
-Find everything under "renewable-energy" at any depth:
+Find everything under "programming" at any depth:
 
 ```sparql
 PREFIX sbkg: <http://secondbrain.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 SELECT DISTINCT ?title ?url WHERE {
-  ?tag skos:broader* <http://secondbrain.ai/kg/concept/renewable-energy> .
+  ?tag skos:broader* <http://secondbrain.ai/kg/concept/programming> .
   ?b sbkg:hasTag ?tag .
   ?b sbkg:title ?title .
   OPTIONAL { ?b sbkg:sourceUrl ?url }
@@ -313,21 +312,21 @@ LLM calls: sbkg_update_sparql("""
   PREFIX doap: <http://usefulinc.com/ns/doap#>
   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
   INSERT DATA {
-    <http://secondbrain.ai/kg/project/sbkg-mcp> a doap:Project ;
-      doap:name "sbkg-mcp" ;
-      doap:shortdesc "Second Brain Knowledge Graph MCP Server" ;
+    <http://secondbrain.ai/kg/project/my-app> a doap:Project ;
+      doap:name "my-app" ;
+      doap:shortdesc "A web application for task management" ;
       doap:programming-language "Python" ;
-      doap:homepage <https://github.com/netsemantics/sbkg-mcp> ;
-      doap:bug-database <https://github.com/netsemantics/sbkg-mcp/issues> ;
+      doap:homepage <https://github.com/user/my-app> ;
+      doap:bug-database <https://github.com/user/my-app/issues> ;
       doap:license <https://opensource.org/licenses/MIT> ;
       doap:repository [
         a doap:GitRepository ;
-        doap:location <https://github.com/netsemantics/sbkg-mcp.git> ;
-        doap:browse <https://github.com/netsemantics/sbkg-mcp>
+        doap:location <https://github.com/user/my-app.git> ;
+        doap:browse <https://github.com/user/my-app>
       ] ;
       doap:maintainer [
         a foaf:Person ;
-        foaf:name "Ken Kirby"
+        foaf:name "Jane Developer"
       ] .
   }
 """)
@@ -358,34 +357,34 @@ orchestrates data flow between servers using standard tool calls.
 **Setup**: SBKG + Gmail/Outlook MCP server
 
 ```
-User: Find my recent emails from the solar installer and summarize
+User: Find my recent emails from the client and summarize
       them in my knowledge graph.
 
 Step 1 — LLM calls email MCP:
-  gmail_search(query="from:installer@solar-mason.com", max_results=10)
-  → Returns 4 emails about installation schedule
+  gmail_search(query="from:client@acme.com", max_results=10)
+  → Returns 4 emails about project requirements
 
 Step 2 — LLM synthesizes and calls SBKG:
   sbkg_add_note(
-    title="Solar Installation Timeline - Solar Mason",
+    title="Client Requirements Summary - Acme Corp",
     content="""
-    Summary of recent emails with Solar Mason:
-    - 2/5: Confirmed ground mount location in backyard
-    - 2/8: Racking materials ordered, ETA 2 weeks
-    - 2/12: Inspection scheduled for 2/20
-    - 2/14: Asked about Enphase IQ8 vs IQ8+ — recommended IQ8+
+    Summary of recent emails with Acme:
+    - 2/5: Confirmed OAuth2 requirement for SSO
+    - 2/8: Need CSV export by end of March
+    - 2/12: Performance requirement: < 200ms API response
+    - 2/14: Asked about multi-tenant support — confirmed needed
     """,
-    tags=["solar", "installer", "solar-mason", "timeline"],
-    project="home-solar",
+    tags=["client", "requirements", "acme"],
+    project="webapp-v2",
     note_type="ProjectNote"
   )
 
 Step 3 — LLM extracts action items:
   sbkg_add_note(
-    title="TODO: Confirm inspection date with Forsyth County",
-    content="Solar Mason scheduled rough-in inspection for 2/20. Verify with county.",
-    tags=["solar", "permits", "forsyth-county", "todo"],
-    project="home-solar"
+    title="TODO: Scope multi-tenant architecture",
+    content="Acme confirmed multi-tenant is required. Need to evaluate ...",
+    tags=["architecture", "multi-tenant", "todo"],
+    project="webapp-v2"
   )
 ```
 
@@ -394,10 +393,10 @@ Step 3 — LLM extracts action items:
 **Setup**: SBKG + GitHub MCP server (or `gh` CLI)
 
 ```
-User: Track the open issues for our sbkg-mcp repo in the knowledge graph.
+User: Track the open issues for our app repo in the knowledge graph.
 
 Step 1 — LLM calls GitHub:
-  gh_list_issues(repo="netsemantics/sbkg-mcp", state="open")
+  gh_list_issues(repo="user/my-app", state="open")
   → Returns 3 open issues
 
 Step 2 — LLM batch-imports into SBKG:
@@ -406,21 +405,21 @@ Step 2 — LLM batch-imports into SBKG:
     PREFIX dcterms: <http://purl.org/dc/terms/>
     INSERT DATA {
       <http://secondbrain.ai/kg/note/gh-issue-12> a sbkg:Note ;
-        sbkg:title "GH #12: Add SPARQL UPDATE support" ;
-        sbkg:content "Support INSERT DATA, DELETE DATA, and DELETE/INSERT WHERE" ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/sbkg-mcp> ;
+        sbkg:title "GH #12: Add CSV export endpoint" ;
+        sbkg:content "Users need to export their data as CSV files" ;
+        sbkg:hasTag <http://secondbrain.ai/kg/concept/my-app> ;
         sbkg:hasTag <http://secondbrain.ai/kg/concept/feature-request> ;
-        sbkg:belongsToProject <http://secondbrain.ai/kg/project/sbkg-mcp> ;
-        dcterms:source <https://github.com/netsemantics/sbkg-mcp/issues/12> ;
+        sbkg:belongsToProject <http://secondbrain.ai/kg/project/my-app> ;
+        dcterms:source <https://github.com/user/my-app/issues/12> ;
         sbkg:hasStatus <http://secondbrain.ai/kg/Open> .
 
       <http://secondbrain.ai/kg/note/gh-issue-15> a sbkg:Note ;
-        sbkg:title "GH #15: Bulk import from Turtle string" ;
-        sbkg:content "Allow loading RDF from in-memory strings" ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/sbkg-mcp> ;
+        sbkg:title "GH #15: Rate limiting for public API" ;
+        sbkg:content "Need to implement rate limiting before GA launch" ;
+        sbkg:hasTag <http://secondbrain.ai/kg/concept/my-app> ;
         sbkg:hasTag <http://secondbrain.ai/kg/concept/feature-request> ;
-        sbkg:belongsToProject <http://secondbrain.ai/kg/project/sbkg-mcp> ;
-        dcterms:source <https://github.com/netsemantics/sbkg-mcp/issues/15> ;
+        sbkg:belongsToProject <http://secondbrain.ai/kg/project/my-app> ;
+        dcterms:source <https://github.com/user/my-app/issues/15> ;
         sbkg:hasStatus <http://secondbrain.ai/kg/Open> .
     }
   """)
@@ -448,10 +447,10 @@ SELECT ?title ?source ?project WHERE {
 **Setup**: SBKG + Google Calendar MCP server
 
 ```
-User: Add my upcoming solar-related appointments to the knowledge graph.
+User: Add my upcoming project-related meetings to the knowledge graph.
 
 Step 1 — LLM calls calendar MCP:
-  gcal_list_events(query="solar", days_ahead=30)
+  gcal_list_events(query="webapp", days_ahead=30)
   → Returns 2 events
 
 Step 2 — LLM stores them:
@@ -459,14 +458,13 @@ Step 2 — LLM stores them:
     PREFIX sbkg: <http://secondbrain.ai/kg/>
     PREFIX dcterms: <http://purl.org/dc/terms/>
     INSERT DATA {
-      <http://secondbrain.ai/kg/note/solar-inspection-feb20> a sbkg:Note ;
-        sbkg:title "Solar Rough-In Inspection" ;
-        sbkg:content "Forsyth County inspector visiting for rough-in check. ..." ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/solar> ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/permits> ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/calendar> ;
-        sbkg:belongsToProject <http://secondbrain.ai/kg/project/home-solar> ;
-        dcterms:issued "2026-02-20T09:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+      <http://secondbrain.ai/kg/note/sprint-demo-feb20> a sbkg:Note ;
+        sbkg:title "Sprint Demo - Feb 20" ;
+        sbkg:content "Demo the auth service and CSV export to stakeholders. ..." ;
+        sbkg:hasTag <http://secondbrain.ai/kg/concept/meeting> ;
+        sbkg:hasTag <http://secondbrain.ai/kg/concept/sprint> ;
+        sbkg:belongsToProject <http://secondbrain.ai/kg/project/webapp-v2> ;
+        dcterms:issued "2026-02-20T14:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
     }
   """)
 ```
@@ -476,40 +474,48 @@ Step 2 — LLM stores them:
 **Setup**: SBKG + web search/fetch MCP
 
 ```
-User: Research ground source heat pump installers in Georgia and
-      save what you find.
+User: Research Python async frameworks and save what you find.
 
 Step 1 — LLM searches the web:
-  web_search(query="ground source heat pump installer Georgia")
+  web_search(query="Python async web framework comparison 2026")
   → Returns 5 results
 
 Step 2 — LLM fetches and summarizes key pages:
-  web_fetch(url="https://example.com/gshp-georgia",
-            prompt="Extract company name, services, service area")
-  → "GeoComfort Southeast — residential GSHP, serves metro Atlanta"
+  web_fetch(url="https://example.com/async-frameworks",
+            prompt="Extract framework names, key features, and benchmarks")
+  → "FastAPI, Starlette, Litestar — comparison of features and performance"
 
 Step 3 — LLM bulk-imports findings:
   sbkg_bulk_import(data="""
     @prefix sbkg: <http://secondbrain.ai/kg/> .
-    @prefix dcterms: <http://purl.org/dc/terms/> .
 
-    <http://secondbrain.ai/kg/bookmark/geocomfort-se>
+    <http://secondbrain.ai/kg/bookmark/fastapi-docs>
       a sbkg:Bookmark ;
-      sbkg:title "GeoComfort Southeast" ;
-      sbkg:sourceUrl "https://example.com/gshp-georgia" ;
-      sbkg:content "Residential GSHP installer serving metro Atlanta" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/gshp> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/installer> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/georgia> ;
+      sbkg:title "FastAPI Documentation" ;
+      sbkg:sourceUrl "https://fastapi.tiangolo.com/" ;
+      sbkg:content "Modern async Python web framework with automatic OpenAPI docs" ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/python> ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/async> ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/framework> ;
       sbkg:hasStatus sbkg:Reference .
+
+    <http://secondbrain.ai/kg/bookmark/litestar-docs>
+      a sbkg:Bookmark ;
+      sbkg:title "Litestar Documentation" ;
+      sbkg:sourceUrl "https://litestar.dev/" ;
+      sbkg:content "High-performance async framework, successor to Starlite" ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/python> ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/async> ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/framework> ;
+      sbkg:hasStatus sbkg:ToRead .
   """, format="turtle")
 
 Step 4 — LLM creates a summary note:
   sbkg_add_note(
-    title="GSHP Installer Research - Georgia",
-    content="Researched 5 GSHP installers in GA. Top options: ...",
-    tags=["gshp", "installer", "georgia", "research"],
-    project="home-gshp"
+    title="Async Framework Research - Python",
+    content="Researched 5 async frameworks. Top options: FastAPI, Litestar ...",
+    tags=["python", "async", "framework", "research"],
+    project="webapp-v2"
   )
 ```
 
@@ -518,7 +524,7 @@ Step 4 — LLM creates a summary note:
 **Setup**: SBKG + filesystem access (read Chrome bookmarks JSON)
 
 ```
-User: Import my Chrome bookmarks from the "Solar and GSHP" folder.
+User: Import my Chrome bookmarks from the "Dev Resources" folder.
 
 Step 1 — LLM reads the Chrome bookmarks file:
   read_file("~/Library/Application Support/Google/Chrome/Default/Bookmarks")
@@ -528,19 +534,25 @@ Step 2 — LLM generates Turtle and bulk-imports:
   sbkg_bulk_import(data="""
     @prefix sbkg: <http://secondbrain.ai/kg/> .
 
-    <http://secondbrain.ai/kg/bookmark/enphase-enlighten>
+    <http://secondbrain.ai/kg/bookmark/mdn-web-docs>
       a sbkg:Bookmark ;
-      sbkg:title "Enphase Enlighten Dashboard" ;
-      sbkg:sourceUrl "https://enlighten.enphaseenergy.com/" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/solar> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/enphase> ;
+      sbkg:title "MDN Web Docs" ;
+      sbkg:sourceUrl "https://developer.mozilla.org/" ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/javascript> ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/reference> ;
+      sbkg:hasStatus sbkg:Reference .
+
+    <http://secondbrain.ai/kg/bookmark/can-i-use>
+      a sbkg:Bookmark ;
+      sbkg:title "Can I Use" ;
+      sbkg:sourceUrl "https://caniuse.com/" ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/frontend> ;
+      sbkg:hasTag <http://secondbrain.ai/kg/concept/reference> ;
       sbkg:hasStatus sbkg:Reference .
 
     ... (more bookmarks)
   """, format="turtle")
 ```
-
-This is exactly how the bookmarks in this project were originally imported.
 
 ---
 
@@ -557,7 +569,7 @@ CONSTRUCT {
 }
 WHERE {
   ?item sbkg:belongsToProject ?proj .
-  ?proj sbkg:title "home-solar" .
+  ?proj sbkg:title "webapp-v2" .
   ?item ?p ?o .
 }
 ```
@@ -577,7 +589,7 @@ ASK {
 Get everything known about a specific bookmark:
 
 ```sparql
-DESCRIBE <http://secondbrain.ai/kg/bookmark/enphase-enlighten-kirby-system-dashboard>
+DESCRIBE <http://secondbrain.ai/kg/bookmark/fastapi-docs>
 ```
 
 ### Find concepts that should be linked
@@ -611,7 +623,7 @@ SELECT ?title ?date WHERE {
   ?n a sbkg:Note .
   ?n sbkg:title ?title .
   ?n dcterms:issued ?date .
-  ?n sbkg:belongsToProject <http://secondbrain.ai/kg/project/home-solar> .
+  ?n sbkg:belongsToProject <http://secondbrain.ai/kg/project/webapp-v2> .
 }
 ORDER BY ?date
 ```

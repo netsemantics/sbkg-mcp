@@ -137,7 +137,7 @@ PREFIX sbkg: <http://secondbrain.ai/kg/>
 SELECT ?title ?url WHERE {
   ?b a sbkg:Bookmark .
   ?b sbkg:hasTag ?tag .
-  ?tag sbkg:title "solar" .
+  ?tag sbkg:title "python" .
   ?b sbkg:title ?title .
   ?b sbkg:sourceUrl ?url .
 }
@@ -194,8 +194,8 @@ WHERE  { ?concept sbkg:title "old-name" }
 PREFIX sbkg: <http://secondbrain.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 INSERT DATA {
-  <http://secondbrain.ai/kg/concept/enphase> skos:broader <http://secondbrain.ai/kg/concept/solar> .
-  <http://secondbrain.ai/kg/concept/solar> skos:narrower <http://secondbrain.ai/kg/concept/enphase> .
+  <http://secondbrain.ai/kg/concept/react> skos:broader <http://secondbrain.ai/kg/concept/frontend> .
+  <http://secondbrain.ai/kg/concept/frontend> skos:narrower <http://secondbrain.ai/kg/concept/react> .
 }
 ```
 

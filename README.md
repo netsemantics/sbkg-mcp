@@ -2,27 +2,37 @@
 
 A **personal knowledge graph** exposed as an [MCP](https://modelcontextprotocol.io/) server. Store notes, bookmarks, concepts, and their relationships as **RDF triples** in a persistent [Oxigraph](https://github.com/oxigraph/oxigraph) database — then query them with **SPARQL** from any MCP-compatible LLM client.
 
-```
-  You (via LLM)          MCP Protocol            SBKG Server
- ┌─────────────┐       ┌───────────┐        ┌──────────────────┐
- │ Claude Code  │──────▸│  Tools &  │───────▸│  Oxigraph Store  │
- │ ChatGPT      │◂──────│ Resources │◂───────│  (RDF Triples)   │
- │ Any MCP host │       └───────────┘        └──────────────────┘
- └─────────────┘                                     │
-                                              ┌──────┴──────┐
-                                              │  Ontologies  │
-                                              │  sbkg + SKOS │
-                                              │  DC + DOAP   │
-                                              └─────────────┘
+```mermaid
+graph LR
+    subgraph Clients
+        A[Claude Code]
+        B[ChatGPT]
+        C[Any MCP Host]
+    end
+
+    subgraph MCP Protocol
+        D[Tools & Resources]
+    end
+
+    subgraph SBKG Server
+        E[Oxigraph Store<br/>RDF Triples]
+        F[Ontologies<br/>sbkg + SKOS<br/>DC + DOAP]
+    end
+
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> F
 ```
 
 ## Why a Knowledge Graph?
 
 Flat notes and bookmarks get lost. A knowledge graph lets you:
 
-- **Connect** information across topics — a bookmark about Enphase microinverters automatically relates to your solar project notes, electrical code references, and installer contacts
-- **Query** with precision — "show me all bookmarks tagged `solar` that I haven't read yet" is a single SPARQL query
-- **Build hierarchies** — SKOS lets you express that `enphase` is a narrower concept under `solar`, so searching for `solar` finds everything
+- **Connect** information across topics — a bookmark about React hooks automatically relates to your JavaScript notes, frontend project, and tutorial collection
+- **Query** with precision — "show me all bookmarks tagged `python` that I haven't read yet" is a single SPARQL query
+- **Build hierarchies** — SKOS lets you express that `react` is a narrower concept under `frontend`, so searching for `frontend` finds everything
 - **Combine with other MCP servers** — pull emails, calendar events, or GitHub issues from other MCP connectors and link them into your graph
 
 ## Quick Start
@@ -56,11 +66,11 @@ Add to your Claude Code MCP config (`~/.claude/settings.json` or project-level):
 Once connected, try these in your LLM client:
 
 ```
-> "Add a bookmark for https://example.com/article titled 'Great Article' tagged with research"
+> "Add a bookmark for https://docs.pytest.org/ titled 'pytest docs' tagged with python and testing"
 
 > "What bookmarks do I have?"
 
-> "Show me everything tagged with 'solar'"
+> "Show me everything tagged with 'python'"
 ```
 
 ## Examples
@@ -68,26 +78,26 @@ Once connected, try these in your LLM client:
 ### Add a bookmark and query it
 
 ```
-User: Save this link — https://diysolarforum.com/threads/ground-mount.26706/
-      Title it "DIY Ground Mount Solar" and tag it with solar and diy.
+User: Save this link — https://hypothesis.readthedocs.io/
+      Title it "Hypothesis Property-Based Testing" and tag it with python and testing.
 
 LLM calls: sbkg_add_bookmark(
-  title="DIY Ground Mount Solar",
-  url="https://diysolarforum.com/threads/ground-mount.26706/",
-  tags=["solar", "diy"],
+  title="Hypothesis Property-Based Testing",
+  url="https://hypothesis.readthedocs.io/",
+  tags=["python", "testing"],
   status="ToRead"
 )
 ```
 
 ```
-User: What DIY resources do I have?
+User: What testing resources do I have?
 
 LLM calls: sbkg_query_sparql("""
   PREFIX sbkg: <http://secondbrain.ai/kg/>
   SELECT ?title ?url WHERE {
     ?b a sbkg:Bookmark .
     ?b sbkg:hasTag ?tag .
-    ?tag sbkg:title "diy" .
+    ?tag sbkg:title "testing" .
     ?b sbkg:title ?title .
     ?b sbkg:sourceUrl ?url .
   }
@@ -129,31 +139,31 @@ LLM calls: sbkg_update_sparql("""
 ### Build concept hierarchies with SKOS
 
 ```
-User: Set up a tag hierarchy — "enphase" and "solar-thermal" should be
-      subtopics of "solar".
+User: Set up a tag hierarchy — "react" and "vue" should be
+      subtopics of "frontend".
 
 LLM calls: sbkg_update_sparql("""
   PREFIX sbkg: <http://secondbrain.ai/kg/>
   PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   INSERT DATA {
-    <http://secondbrain.ai/kg/concept/enphase>
-      skos:broader <http://secondbrain.ai/kg/concept/solar> .
-    <http://secondbrain.ai/kg/concept/solar-thermal>
-      skos:broader <http://secondbrain.ai/kg/concept/solar> .
-    <http://secondbrain.ai/kg/concept/solar>
-      skos:narrower <http://secondbrain.ai/kg/concept/enphase> ;
-      skos:narrower <http://secondbrain.ai/kg/concept/solar-thermal> .
+    <http://secondbrain.ai/kg/concept/react>
+      skos:broader <http://secondbrain.ai/kg/concept/frontend> .
+    <http://secondbrain.ai/kg/concept/vue>
+      skos:broader <http://secondbrain.ai/kg/concept/frontend> .
+    <http://secondbrain.ai/kg/concept/frontend>
+      skos:narrower <http://secondbrain.ai/kg/concept/react> ;
+      skos:narrower <http://secondbrain.ai/kg/concept/vue> .
   }
 """)
 ```
 
-Then query "everything under solar" including subtopics:
+Then query "everything under frontend" including subtopics:
 
 ```sparql
 PREFIX sbkg: <http://secondbrain.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 SELECT ?title ?url WHERE {
-  ?tag skos:broader* <http://secondbrain.ai/kg/concept/solar> .
+  ?tag skos:broader* <http://secondbrain.ai/kg/concept/frontend> .
   ?b sbkg:hasTag ?tag .
   ?b sbkg:title ?title .
   ?b sbkg:sourceUrl ?url .
@@ -165,23 +175,23 @@ SELECT ?title ?url WHERE {
 When SBKG is combined with an email MCP server (e.g. Gmail, Outlook), an LLM can extract knowledge from emails and store it:
 
 ```
-User: Check my recent emails about the solar permit and save
+User: Check my recent emails about the conference and save
       any useful info to my knowledge graph.
 
-LLM calls: gmail_search(query="solar permit", max_results=5)
-  → Returns 3 emails with permit status updates
+LLM calls: gmail_search(query="PyCon 2026", max_results=5)
+  → Returns 3 emails with schedule and travel details
 
 LLM calls: sbkg_add_note(
-  title="Solar Permit Status - Feb 2026",
-  content="Forsyth County approved the electrical permit on 2/10. ..."
-  tags=["solar", "permits", "forsyth-county"],
-  project="home-solar"
+  title="PyCon 2026 - Travel & Schedule",
+  content="Conference runs May 15-17. Talk accepted for Day 2. ..."
+  tags=["conference", "python", "travel"],
+  project="pycon-2026"
 )
 
 LLM calls: sbkg_add_bookmark(
-  title="Forsyth County Permit Portal",
-  url="https://forsythco.com/permits/status/12345",
-  tags=["solar", "permits", "forsyth-county"]
+  title="PyCon 2026 Schedule",
+  url="https://us.pycon.org/2026/schedule/",
+  tags=["conference", "python"]
 )
 ```
 
