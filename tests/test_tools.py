@@ -34,8 +34,8 @@ class TestAddNote:
         assert result["tags"] == ["python", "rdf"]
         # Verify in store
         sparql = json.loads(srv.sbkg_query_sparql(
-            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
-            "SELECT ?tag WHERE { <http://secondbrain.ai/kg/note/tagged-note> sbkg:hasTag ?tag }"
+            "PREFIX sbkg: <http://sb.ai/kg/> "
+            "SELECT ?tag WHERE { <http://sb.ai/kg/note/tagged-note> sbkg:hasTag ?tag }"
         ))
         assert len(sparql) == 2
 
@@ -67,7 +67,7 @@ class TestQuerySparql:
     def test_select(self):
         srv.sbkg_add_note("Query Test")
         result = json.loads(srv.sbkg_query_sparql(
-            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
+            "PREFIX sbkg: <http://sb.ai/kg/> "
             "SELECT ?title WHERE { ?n a sbkg:Note . ?n sbkg:title ?title }"
         ))
         titles = [r["title"] for r in result]
@@ -117,7 +117,7 @@ class TestImportTriples:
     def test_import(self, tmp_path):
         ttl = tmp_path / "data.ttl"
         ttl.write_text(
-            '<http://secondbrain.ai/kg/note/ext> <http://secondbrain.ai/kg/title> "External" .\n',
+            '<http://sb.ai/kg/note/ext> <http://sb.ai/kg/title> "External" .\n',
             encoding="utf-8",
         )
         result = json.loads(srv.sbkg_import_triples(str(ttl), format="turtle"))
@@ -132,8 +132,8 @@ class TestDeleteNote:
         assert result["triples_removed"] > 0
         # Verify it's gone
         sparql = json.loads(srv.sbkg_query_sparql(
-            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
-            "SELECT ?t WHERE { <http://secondbrain.ai/kg/note/to-delete> sbkg:title ?t }"
+            "PREFIX sbkg: <http://sb.ai/kg/> "
+            "SELECT ?t WHERE { <http://sb.ai/kg/note/to-delete> sbkg:title ?t }"
         ))
         assert len(sparql) == 0
 
@@ -148,8 +148,8 @@ class TestDeleteNote:
         assert result["deleted"] is True
         # The linksTo triple pointing to Target should also be gone
         sparql = json.loads(srv.sbkg_query_sparql(
-            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
-            "SELECT ?o WHERE { <http://secondbrain.ai/kg/note/source> sbkg:linksTo ?o }"
+            "PREFIX sbkg: <http://sb.ai/kg/> "
+            "SELECT ?o WHERE { <http://sb.ai/kg/note/source> sbkg:linksTo ?o }"
         ))
         assert len(sparql) == 0
 
@@ -180,15 +180,15 @@ class TestClearAll:
         assert result["ontology_triples_reloaded"] > 0
         # User data should be gone
         sparql = json.loads(srv.sbkg_query_sparql(
-            "PREFIX sbkg: <http://secondbrain.ai/kg/> "
+            "PREFIX sbkg: <http://sb.ai/kg/> "
             "SELECT ?n WHERE { ?n a sbkg:Note }"
         ))
         assert len(sparql) == 0
 
 
 class TestUpdateSparql:
-    _BM = "http://secondbrain.ai/kg/bookmark/"
-    _NS = "http://secondbrain.ai/kg/"
+    _BM = "http://sb.ai/kg/bookmark/"
+    _NS = "http://sb.ai/kg/"
 
     def test_insert_data(self):
         result = json.loads(srv.sbkg_update_sparql(
@@ -201,7 +201,7 @@ class TestUpdateSparql:
         assert result["triples_delta"] == 6
         # Verify both bookmarks exist
         rows = json.loads(srv.sbkg_query_sparql(
-            'PREFIX sbkg: <http://secondbrain.ai/kg/> '
+            'PREFIX sbkg: <http://sb.ai/kg/> '
             'SELECT ?title WHERE { ?b a sbkg:Bookmark . ?b sbkg:title ?title } ORDER BY ?title'
         ))
         titles = [r["title"] for r in rows]
@@ -238,22 +238,22 @@ class TestUpdateSparql:
 class TestBulkImport:
     def test_turtle_string(self):
         ttl = (
-            '<http://secondbrain.ai/kg/bookmark/bulk-a> a <http://secondbrain.ai/kg/Bookmark> ;\n'
-            '  <http://secondbrain.ai/kg/title> "Bulk A" ;\n'
-            '  <http://secondbrain.ai/kg/sourceUrl> "https://a.com" .\n'
-            '<http://secondbrain.ai/kg/bookmark/bulk-b> a <http://secondbrain.ai/kg/Bookmark> ;\n'
-            '  <http://secondbrain.ai/kg/title> "Bulk B" ;\n'
-            '  <http://secondbrain.ai/kg/sourceUrl> "https://b.com" .\n'
-            '<http://secondbrain.ai/kg/bookmark/bulk-c> a <http://secondbrain.ai/kg/Bookmark> ;\n'
-            '  <http://secondbrain.ai/kg/title> "Bulk C" ;\n'
-            '  <http://secondbrain.ai/kg/sourceUrl> "https://c.com" .\n'
+            '<http://sb.ai/kg/bookmark/bulk-a> a <http://sb.ai/kg/Bookmark> ;\n'
+            '  <http://sb.ai/kg/title> "Bulk A" ;\n'
+            '  <http://sb.ai/kg/sourceUrl> "https://a.com" .\n'
+            '<http://sb.ai/kg/bookmark/bulk-b> a <http://sb.ai/kg/Bookmark> ;\n'
+            '  <http://sb.ai/kg/title> "Bulk B" ;\n'
+            '  <http://sb.ai/kg/sourceUrl> "https://b.com" .\n'
+            '<http://sb.ai/kg/bookmark/bulk-c> a <http://sb.ai/kg/Bookmark> ;\n'
+            '  <http://sb.ai/kg/title> "Bulk C" ;\n'
+            '  <http://sb.ai/kg/sourceUrl> "https://c.com" .\n'
         )
         result = json.loads(srv.sbkg_bulk_import(data=ttl, format="turtle"))
         assert result["success"] is True
         assert result["triples_added"] == 9  # 3 bookmarks x 3 triples each
         # Verify all three exist
         rows = json.loads(srv.sbkg_query_sparql(
-            'PREFIX sbkg: <http://secondbrain.ai/kg/> '
+            'PREFIX sbkg: <http://sb.ai/kg/> '
             'SELECT ?title WHERE { ?b a sbkg:Bookmark . ?b sbkg:title ?title } ORDER BY ?title'
         ))
         titles = [r["title"] for r in rows]
@@ -261,11 +261,11 @@ class TestBulkImport:
 
     def test_ntriples_string(self):
         nt = (
-            '<http://secondbrain.ai/kg/bookmark/nt-test> '
+            '<http://sb.ai/kg/bookmark/nt-test> '
             '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> '
-            '<http://secondbrain.ai/kg/Bookmark> .\n'
-            '<http://secondbrain.ai/kg/bookmark/nt-test> '
-            '<http://secondbrain.ai/kg/title> '
+            '<http://sb.ai/kg/Bookmark> .\n'
+            '<http://sb.ai/kg/bookmark/nt-test> '
+            '<http://sb.ai/kg/title> '
             '"NT Test" .\n'
         )
         result = json.loads(srv.sbkg_bulk_import(data=nt, format="ntriples"))

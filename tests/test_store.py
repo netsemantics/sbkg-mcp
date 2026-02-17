@@ -54,11 +54,11 @@ class TestKnowledgeStore:
 
     def test_export_turtle(self, store):
         content = store.export(fmt="turtle")
-        assert "secondbrain" in content
+        assert "sb.ai" in content
 
     def test_export_ntriples(self, store):
         content = store.export(fmt="ntriples")
-        assert "<http://secondbrain.ai/kg/" in content
+        assert "<http://sb.ai/kg/" in content
 
     def test_import_rdf(self, store, tmp_path):
         ttl_file = tmp_path / "import.ttl"

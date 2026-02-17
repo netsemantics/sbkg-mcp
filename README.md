@@ -93,7 +93,7 @@ LLM calls: sbkg_add_bookmark(
 User: What testing resources do I have?
 
 LLM calls: sbkg_query_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
+  PREFIX sbkg: <http://sb.ai/kg/>
   SELECT ?title ?url WHERE {
     ?b a sbkg:Bookmark .
     ?b sbkg:hasTag ?tag .
@@ -112,25 +112,25 @@ Instead of adding bookmarks one at a time, insert many in a single call:
 User: Add these three bookmarks about Python testing.
 
 LLM calls: sbkg_update_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
+  PREFIX sbkg: <http://sb.ai/kg/>
   INSERT DATA {
-    <http://secondbrain.ai/kg/bookmark/pytest-docs> a sbkg:Bookmark ;
+    <http://sb.ai/kg/bookmark/pytest-docs> a sbkg:Bookmark ;
       sbkg:title "pytest documentation" ;
       sbkg:sourceUrl "https://docs.pytest.org/" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/python> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/testing> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/python> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/testing> ;
       sbkg:hasStatus sbkg:Reference .
-    <http://secondbrain.ai/kg/bookmark/hypothesis> a sbkg:Bookmark ;
+    <http://sb.ai/kg/bookmark/hypothesis> a sbkg:Bookmark ;
       sbkg:title "Hypothesis property-based testing" ;
       sbkg:sourceUrl "https://hypothesis.readthedocs.io/" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/python> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/testing> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/python> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/testing> ;
       sbkg:hasStatus sbkg:ToRead .
-    <http://secondbrain.ai/kg/bookmark/coverage-py> a sbkg:Bookmark ;
+    <http://sb.ai/kg/bookmark/coverage-py> a sbkg:Bookmark ;
       sbkg:title "Coverage.py" ;
       sbkg:sourceUrl "https://coverage.readthedocs.io/" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/python> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/testing> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/python> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/testing> ;
       sbkg:hasStatus sbkg:ToRead .
   }
 """)
@@ -143,16 +143,16 @@ User: Set up a tag hierarchy — "react" and "vue" should be
       subtopics of "frontend".
 
 LLM calls: sbkg_update_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
+  PREFIX sbkg: <http://sb.ai/kg/>
   PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   INSERT DATA {
-    <http://secondbrain.ai/kg/concept/react>
-      skos:broader <http://secondbrain.ai/kg/concept/frontend> .
-    <http://secondbrain.ai/kg/concept/vue>
-      skos:broader <http://secondbrain.ai/kg/concept/frontend> .
-    <http://secondbrain.ai/kg/concept/frontend>
-      skos:narrower <http://secondbrain.ai/kg/concept/react> ;
-      skos:narrower <http://secondbrain.ai/kg/concept/vue> .
+    <http://sb.ai/kg/concept/react>
+      skos:broader <http://sb.ai/kg/concept/frontend> .
+    <http://sb.ai/kg/concept/vue>
+      skos:broader <http://sb.ai/kg/concept/frontend> .
+    <http://sb.ai/kg/concept/frontend>
+      skos:narrower <http://sb.ai/kg/concept/react> ;
+      skos:narrower <http://sb.ai/kg/concept/vue> .
   }
 """)
 ```
@@ -160,10 +160,10 @@ LLM calls: sbkg_update_sparql("""
 Then query "everything under frontend" including subtopics:
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 SELECT ?title ?url WHERE {
-  ?tag skos:broader* <http://secondbrain.ai/kg/concept/frontend> .
+  ?tag skos:broader* <http://sb.ai/kg/concept/frontend> .
   ?b sbkg:hasTag ?tag .
   ?b sbkg:title ?title .
   ?b sbkg:sourceUrl ?url .

@@ -39,7 +39,7 @@ def get_ontology_turtle() -> str:
 def get_ontology_summary() -> str:
     """Return a human-readable summary of the SBKG ontology and extensions."""
     return (
-        "SBKG Ontology — namespace: http://secondbrain.ai/kg/\n"
+        "SBKG Ontology — namespace: http://sb.ai/kg/\n"
         "\n"
         "Core Classes:\n"
         "  sbkg:Note (subtypes: DailyNote, ProjectNote, AreaNote, ResourceNote, FleetingNote)\n"
@@ -68,7 +68,7 @@ def get_ontology_summary() -> str:
         "    Includes minimal FOAF: foaf:Person, foaf:name, foaf:mbox, foaf:homepage\n"
         "\n"
         "Prefixes:\n"
-        "  PREFIX sbkg:    <http://secondbrain.ai/kg/>\n"
+        "  PREFIX sbkg:    <http://sb.ai/kg/>\n"
         "  PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>\n"
         "  PREFIX dcterms: <http://purl.org/dc/terms/>\n"
         "  PREFIX doap:    <http://usefulinc.com/ns/doap#>\n"

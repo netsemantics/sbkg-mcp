@@ -1,7 +1,7 @@
 [project]
 name = "sbkg-mcp"
 version = "0.1.0"
-description = "Second Brain Knowledge Graph MCP Server — stores notes, bookmarks, and relationships as RDF triples"
+description = "Personal Knowledge Graph MCP Server — stores notes, bookmarks, and relationships as RDF triples"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

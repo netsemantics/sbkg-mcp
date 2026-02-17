@@ -226,21 +226,21 @@ def sbkg_query_natural(question: str) -> str:
         "instructions": (
             "Use the ontology above to write a SPARQL query that answers the question. "
             "Then call sbkg_query_sparql with the generated SPARQL. "
-            "All SBKG entities use the namespace PREFIX sbkg: <http://secondbrain.ai/kg/>. "
+            "All SBKG entities use the namespace PREFIX sbkg: <http://sb.ai/kg/>. "
             "Notes have type sbkg:Note (or subtypes), bookmarks sbkg:Bookmark, tags sbkg:Concept."
         ),
         "example_queries": [
             {
                 "description": "List all notes",
-                "sparql": "PREFIX sbkg: <http://secondbrain.ai/kg/> SELECT ?note ?title WHERE { ?note a sbkg:Note . ?note sbkg:title ?title . }",
+                "sparql": "PREFIX sbkg: <http://sb.ai/kg/> SELECT ?note ?title WHERE { ?note a sbkg:Note . ?note sbkg:title ?title . }",
             },
             {
                 "description": "Find notes with a specific tag",
-                "sparql": "PREFIX sbkg: <http://secondbrain.ai/kg/> SELECT ?note ?title WHERE { ?note sbkg:hasTag ?tag . ?tag sbkg:title \"python\" . ?note sbkg:title ?title . }",
+                "sparql": "PREFIX sbkg: <http://sb.ai/kg/> SELECT ?note ?title WHERE { ?note sbkg:hasTag ?tag . ?tag sbkg:title \"python\" . ?note sbkg:title ?title . }",
             },
             {
                 "description": "Find notes in a project",
-                "sparql": "PREFIX sbkg: <http://secondbrain.ai/kg/> SELECT ?note ?title WHERE { ?note sbkg:belongsToProject ?proj . ?proj sbkg:title \"my-project\" . ?note sbkg:title ?title . }",
+                "sparql": "PREFIX sbkg: <http://sb.ai/kg/> SELECT ?note ?title WHERE { ?note sbkg:belongsToProject ?proj . ?proj sbkg:title \"my-project\" . ?note sbkg:title ?title . }",
             },
         ],
     })
@@ -266,7 +266,7 @@ def sbkg_get_related_notes(title: str, max_results: int = 20) -> str:
     note_uri = make_note_uri(slug)
 
     sparql = f"""
-    PREFIX sbkg: <http://secondbrain.ai/kg/>
+    PREFIX sbkg: <http://sb.ai/kg/>
 
     SELECT DISTINCT ?related ?relTitle ?relType WHERE {{
       BIND(<{note_uri}> AS ?source)

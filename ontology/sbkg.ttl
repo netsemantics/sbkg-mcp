@@ -1,4 +1,4 @@
-@prefix sbkg:    <http://secondbrain.ai/kg/> .
+@prefix sbkg:    <http://sb.ai/kg/> .
 @prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
@@ -10,7 +10,7 @@
 
 sbkg:Note a rdfs:Class ;
     rdfs:label "Note" ;
-    rdfs:comment "A knowledge note in the second brain." .
+    rdfs:comment "A knowledge note in the graph." .
 
 sbkg:DailyNote a rdfs:Class ;
     rdfs:subClassOf sbkg:Note ;

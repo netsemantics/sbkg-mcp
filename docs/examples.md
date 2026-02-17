@@ -55,17 +55,17 @@ LLM calls: sbkg_add_bookmark(
 User: I finished reading the microservices article.
 
 LLM calls: sbkg_update_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
+  PREFIX sbkg: <http://sb.ai/kg/>
   DELETE {
-    <http://secondbrain.ai/kg/bookmark/microservices-patterns>
+    <http://sb.ai/kg/bookmark/microservices-patterns>
       sbkg:hasStatus ?oldStatus .
   }
   INSERT {
-    <http://secondbrain.ai/kg/bookmark/microservices-patterns>
+    <http://sb.ai/kg/bookmark/microservices-patterns>
       sbkg:hasStatus sbkg:Read .
   }
   WHERE {
-    <http://secondbrain.ai/kg/bookmark/microservices-patterns>
+    <http://sb.ai/kg/bookmark/microservices-patterns>
       sbkg:hasStatus ?oldStatus .
   }
 """)
@@ -106,7 +106,7 @@ Wikilinks (`[[...]]`) are automatically extracted as `sbkg:linksTo` relationship
 ### List all bookmarks I haven't read
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title ?url WHERE {
   ?b a sbkg:Bookmark .
   ?b sbkg:hasStatus sbkg:ToRead .
@@ -118,7 +118,7 @@ SELECT ?title ?url WHERE {
 ### Find notes in a specific project
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title ?created WHERE {
   ?n a sbkg:Note .
   ?n sbkg:belongsToProject ?proj .
@@ -132,7 +132,7 @@ ORDER BY DESC(?created)
 ### Search across titles and content
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title ?type WHERE {
   { ?item a sbkg:Note . BIND("Note" AS ?type) }
   UNION
@@ -149,7 +149,7 @@ SELECT ?title ?type WHERE {
 ### Count items by type
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?type (COUNT(?item) AS ?count) WHERE {
   ?item a ?type .
   FILTER(?type IN (sbkg:Note, sbkg:Bookmark, sbkg:Concept))
@@ -160,7 +160,7 @@ GROUP BY ?type
 ### Find orphan bookmarks (no tags)
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title ?url WHERE {
   ?b a sbkg:Bookmark .
   ?b sbkg:title ?title .
@@ -172,7 +172,7 @@ SELECT ?title ?url WHERE {
 ### Find heavily tagged items
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title (COUNT(?tag) AS ?tagCount) WHERE {
   ?item sbkg:title ?title .
   ?item sbkg:hasTag ?tag .
@@ -192,22 +192,22 @@ Generate a Turtle document and load it in one call:
 
 ```
 LLM calls: sbkg_bulk_import(data="""
-  @prefix sbkg: <http://secondbrain.ai/kg/> .
+  @prefix sbkg: <http://sb.ai/kg/> .
 
-  <http://secondbrain.ai/kg/bookmark/react-docs>
+  <http://sb.ai/kg/bookmark/react-docs>
     a sbkg:Bookmark ;
     sbkg:title "React Documentation" ;
     sbkg:sourceUrl "https://react.dev/" ;
-    sbkg:hasTag <http://secondbrain.ai/kg/concept/javascript> ;
-    sbkg:hasTag <http://secondbrain.ai/kg/concept/frontend> ;
+    sbkg:hasTag <http://sb.ai/kg/concept/javascript> ;
+    sbkg:hasTag <http://sb.ai/kg/concept/frontend> ;
     sbkg:hasStatus sbkg:Reference .
 
-  <http://secondbrain.ai/kg/bookmark/nextjs-docs>
+  <http://sb.ai/kg/bookmark/nextjs-docs>
     a sbkg:Bookmark ;
     sbkg:title "Next.js Documentation" ;
     sbkg:sourceUrl "https://nextjs.org/docs" ;
-    sbkg:hasTag <http://secondbrain.ai/kg/concept/javascript> ;
-    sbkg:hasTag <http://secondbrain.ai/kg/concept/frontend> ;
+    sbkg:hasTag <http://sb.ai/kg/concept/javascript> ;
+    sbkg:hasTag <http://sb.ai/kg/concept/frontend> ;
     sbkg:hasStatus sbkg:Reference .
 """, format="turtle")
 ```
@@ -216,10 +216,10 @@ LLM calls: sbkg_bulk_import(data="""
 
 ```
 LLM calls: sbkg_update_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
-  DELETE { <http://secondbrain.ai/kg/concept/js> sbkg:title "js" }
-  INSERT { <http://secondbrain.ai/kg/concept/js> sbkg:title "javascript" }
-  WHERE  { <http://secondbrain.ai/kg/concept/js> sbkg:title "js" }
+  PREFIX sbkg: <http://sb.ai/kg/>
+  DELETE { <http://sb.ai/kg/concept/js> sbkg:title "js" }
+  INSERT { <http://sb.ai/kg/concept/js> sbkg:title "javascript" }
+  WHERE  { <http://sb.ai/kg/concept/js> sbkg:title "js" }
 """)
 ```
 
@@ -227,8 +227,8 @@ LLM calls: sbkg_update_sparql("""
 
 ```
 LLM calls: sbkg_update_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
-  INSERT { ?b sbkg:hasTag <http://secondbrain.ai/kg/concept/devops> }
+  PREFIX sbkg: <http://sb.ai/kg/>
+  INSERT { ?b sbkg:hasTag <http://sb.ai/kg/concept/devops> }
   WHERE {
     ?b a sbkg:Bookmark .
     ?b sbkg:title ?title .
@@ -245,27 +245,27 @@ LLM calls: sbkg_update_sparql("""
 
 ```
 LLM calls: sbkg_update_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
+  PREFIX sbkg: <http://sb.ai/kg/>
   PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   INSERT DATA {
-    <http://secondbrain.ai/kg/concept/programming> a sbkg:Concept ;
+    <http://sb.ai/kg/concept/programming> a sbkg:Concept ;
       sbkg:title "programming" ;
       skos:prefLabel "Programming" .
 
-    <http://secondbrain.ai/kg/concept/frontend>
-      skos:broader <http://secondbrain.ai/kg/concept/programming> ;
+    <http://sb.ai/kg/concept/frontend>
+      skos:broader <http://sb.ai/kg/concept/programming> ;
       skos:prefLabel "Frontend" .
 
-    <http://secondbrain.ai/kg/concept/react>
-      skos:broader <http://secondbrain.ai/kg/concept/frontend> ;
+    <http://sb.ai/kg/concept/react>
+      skos:broader <http://sb.ai/kg/concept/frontend> ;
       skos:prefLabel "React" .
 
-    <http://secondbrain.ai/kg/concept/vue>
-      skos:broader <http://secondbrain.ai/kg/concept/frontend> ;
+    <http://sb.ai/kg/concept/vue>
+      skos:broader <http://sb.ai/kg/concept/frontend> ;
       skos:prefLabel "Vue" .
 
-    <http://secondbrain.ai/kg/concept/backend>
-      skos:broader <http://secondbrain.ai/kg/concept/programming> ;
+    <http://sb.ai/kg/concept/backend>
+      skos:broader <http://sb.ai/kg/concept/programming> ;
       skos:prefLabel "Backend" ;
       skos:altLabel "server-side" .
   }
@@ -277,10 +277,10 @@ LLM calls: sbkg_update_sparql("""
 Find everything under "programming" at any depth:
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 SELECT DISTINCT ?title ?url WHERE {
-  ?tag skos:broader* <http://secondbrain.ai/kg/concept/programming> .
+  ?tag skos:broader* <http://sb.ai/kg/concept/programming> .
   ?b sbkg:hasTag ?tag .
   ?b sbkg:title ?title .
   OPTIONAL { ?b sbkg:sourceUrl ?url }
@@ -290,7 +290,7 @@ SELECT DISTINCT ?title ?url WHERE {
 ### Show the concept tree
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 SELECT ?parent ?parentLabel ?child ?childLabel WHERE {
   ?child skos:broader ?parent .
@@ -308,11 +308,11 @@ ORDER BY ?parentLabel ?childLabel
 
 ```
 LLM calls: sbkg_update_sparql("""
-  PREFIX sbkg: <http://secondbrain.ai/kg/>
+  PREFIX sbkg: <http://sb.ai/kg/>
   PREFIX doap: <http://usefulinc.com/ns/doap#>
   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
   INSERT DATA {
-    <http://secondbrain.ai/kg/project/my-app> a doap:Project ;
+    <http://sb.ai/kg/project/my-app> a doap:Project ;
       doap:name "my-app" ;
       doap:shortdesc "A web application for task management" ;
       doap:programming-language "Python" ;
@@ -401,26 +401,26 @@ Step 1 — LLM calls GitHub:
 
 Step 2 — LLM batch-imports into SBKG:
   sbkg_update_sparql("""
-    PREFIX sbkg: <http://secondbrain.ai/kg/>
+    PREFIX sbkg: <http://sb.ai/kg/>
     PREFIX dcterms: <http://purl.org/dc/terms/>
     INSERT DATA {
-      <http://secondbrain.ai/kg/note/gh-issue-12> a sbkg:Note ;
+      <http://sb.ai/kg/note/gh-issue-12> a sbkg:Note ;
         sbkg:title "GH #12: Add CSV export endpoint" ;
         sbkg:content "Users need to export their data as CSV files" ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/my-app> ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/feature-request> ;
-        sbkg:belongsToProject <http://secondbrain.ai/kg/project/my-app> ;
+        sbkg:hasTag <http://sb.ai/kg/concept/my-app> ;
+        sbkg:hasTag <http://sb.ai/kg/concept/feature-request> ;
+        sbkg:belongsToProject <http://sb.ai/kg/project/my-app> ;
         dcterms:source <https://github.com/user/my-app/issues/12> ;
-        sbkg:hasStatus <http://secondbrain.ai/kg/Open> .
+        sbkg:hasStatus <http://sb.ai/kg/Open> .
 
-      <http://secondbrain.ai/kg/note/gh-issue-15> a sbkg:Note ;
+      <http://sb.ai/kg/note/gh-issue-15> a sbkg:Note ;
         sbkg:title "GH #15: Rate limiting for public API" ;
         sbkg:content "Need to implement rate limiting before GA launch" ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/my-app> ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/feature-request> ;
-        sbkg:belongsToProject <http://secondbrain.ai/kg/project/my-app> ;
+        sbkg:hasTag <http://sb.ai/kg/concept/my-app> ;
+        sbkg:hasTag <http://sb.ai/kg/concept/feature-request> ;
+        sbkg:belongsToProject <http://sb.ai/kg/project/my-app> ;
         dcterms:source <https://github.com/user/my-app/issues/15> ;
-        sbkg:hasStatus <http://secondbrain.ai/kg/Open> .
+        sbkg:hasStatus <http://sb.ai/kg/Open> .
     }
   """)
 ```
@@ -428,12 +428,12 @@ Step 2 — LLM batch-imports into SBKG:
 Later, query all open items across projects:
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 SELECT ?title ?source ?project WHERE {
   ?n a sbkg:Note .
   ?n sbkg:title ?title .
-  ?n sbkg:hasStatus <http://secondbrain.ai/kg/Open> .
+  ?n sbkg:hasStatus <http://sb.ai/kg/Open> .
   OPTIONAL { ?n dcterms:source ?source }
   OPTIONAL {
     ?n sbkg:belongsToProject ?proj .
@@ -455,15 +455,15 @@ Step 1 — LLM calls calendar MCP:
 
 Step 2 — LLM stores them:
   sbkg_update_sparql("""
-    PREFIX sbkg: <http://secondbrain.ai/kg/>
+    PREFIX sbkg: <http://sb.ai/kg/>
     PREFIX dcterms: <http://purl.org/dc/terms/>
     INSERT DATA {
-      <http://secondbrain.ai/kg/note/sprint-demo-feb20> a sbkg:Note ;
+      <http://sb.ai/kg/note/sprint-demo-feb20> a sbkg:Note ;
         sbkg:title "Sprint Demo - Feb 20" ;
         sbkg:content "Demo the auth service and CSV export to stakeholders. ..." ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/meeting> ;
-        sbkg:hasTag <http://secondbrain.ai/kg/concept/sprint> ;
-        sbkg:belongsToProject <http://secondbrain.ai/kg/project/webapp-v2> ;
+        sbkg:hasTag <http://sb.ai/kg/concept/meeting> ;
+        sbkg:hasTag <http://sb.ai/kg/concept/sprint> ;
+        sbkg:belongsToProject <http://sb.ai/kg/project/webapp-v2> ;
         dcterms:issued "2026-02-20T14:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
     }
   """)
@@ -487,26 +487,26 @@ Step 2 — LLM fetches and summarizes key pages:
 
 Step 3 — LLM bulk-imports findings:
   sbkg_bulk_import(data="""
-    @prefix sbkg: <http://secondbrain.ai/kg/> .
+    @prefix sbkg: <http://sb.ai/kg/> .
 
-    <http://secondbrain.ai/kg/bookmark/fastapi-docs>
+    <http://sb.ai/kg/bookmark/fastapi-docs>
       a sbkg:Bookmark ;
       sbkg:title "FastAPI Documentation" ;
       sbkg:sourceUrl "https://fastapi.tiangolo.com/" ;
       sbkg:content "Modern async Python web framework with automatic OpenAPI docs" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/python> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/async> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/framework> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/python> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/async> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/framework> ;
       sbkg:hasStatus sbkg:Reference .
 
-    <http://secondbrain.ai/kg/bookmark/litestar-docs>
+    <http://sb.ai/kg/bookmark/litestar-docs>
       a sbkg:Bookmark ;
       sbkg:title "Litestar Documentation" ;
       sbkg:sourceUrl "https://litestar.dev/" ;
       sbkg:content "High-performance async framework, successor to Starlite" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/python> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/async> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/framework> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/python> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/async> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/framework> ;
       sbkg:hasStatus sbkg:ToRead .
   """, format="turtle")
 
@@ -532,22 +532,22 @@ Step 1 — LLM reads the Chrome bookmarks file:
 
 Step 2 — LLM generates Turtle and bulk-imports:
   sbkg_bulk_import(data="""
-    @prefix sbkg: <http://secondbrain.ai/kg/> .
+    @prefix sbkg: <http://sb.ai/kg/> .
 
-    <http://secondbrain.ai/kg/bookmark/mdn-web-docs>
+    <http://sb.ai/kg/bookmark/mdn-web-docs>
       a sbkg:Bookmark ;
       sbkg:title "MDN Web Docs" ;
       sbkg:sourceUrl "https://developer.mozilla.org/" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/javascript> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/reference> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/javascript> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/reference> ;
       sbkg:hasStatus sbkg:Reference .
 
-    <http://secondbrain.ai/kg/bookmark/can-i-use>
+    <http://sb.ai/kg/bookmark/can-i-use>
       a sbkg:Bookmark ;
       sbkg:title "Can I Use" ;
       sbkg:sourceUrl "https://caniuse.com/" ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/frontend> ;
-      sbkg:hasTag <http://secondbrain.ai/kg/concept/reference> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/frontend> ;
+      sbkg:hasTag <http://sb.ai/kg/concept/reference> ;
       sbkg:hasStatus sbkg:Reference .
 
     ... (more bookmarks)
@@ -563,7 +563,7 @@ Step 2 — LLM generates Turtle and bulk-imports:
 Export a project's data as a self-contained graph:
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 CONSTRUCT {
   ?item ?p ?o .
 }
@@ -577,7 +577,7 @@ WHERE {
 ### ASK if a concept exists
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 ASK {
   ?c a sbkg:Concept .
   ?c sbkg:title "kubernetes" .
@@ -589,7 +589,7 @@ ASK {
 Get everything known about a specific bookmark:
 
 ```sparql
-DESCRIBE <http://secondbrain.ai/kg/bookmark/fastapi-docs>
+DESCRIBE <http://sb.ai/kg/bookmark/fastapi-docs>
 ```
 
 ### Find concepts that should be linked
@@ -597,7 +597,7 @@ DESCRIBE <http://secondbrain.ai/kg/bookmark/fastapi-docs>
 Identify concepts that co-occur on items but don't have a `skos:related` link:
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 SELECT ?tag1Label ?tag2Label (COUNT(?item) AS ?cooccurrences) WHERE {
   ?item sbkg:hasTag ?tag1 .
@@ -617,13 +617,13 @@ ORDER BY DESC(?cooccurrences)
 ### Timeline query with Dublin Core dates
 
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 SELECT ?title ?date WHERE {
   ?n a sbkg:Note .
   ?n sbkg:title ?title .
   ?n dcterms:issued ?date .
-  ?n sbkg:belongsToProject <http://secondbrain.ai/kg/project/webapp-v2> .
+  ?n sbkg:belongsToProject <http://sb.ai/kg/project/webapp-v2> .
 }
 ORDER BY ?date
 ```

@@ -13,4 +13,4 @@ def test_get_ontology_turtle():
 def test_get_ontology_summary():
     summary = get_ontology_summary()
     assert "sbkg:Note" in summary
-    assert "secondbrain.ai" in summary
+    assert "sb.ai" in summary

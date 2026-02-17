@@ -5,7 +5,7 @@ import unicodedata
 from datetime import datetime, timezone
 
 
-SBKG_NS = "http://secondbrain.ai/kg/"
+SBKG_NS = "http://sb.ai/kg/"
 
 
 def slugify(text: str) -> str:

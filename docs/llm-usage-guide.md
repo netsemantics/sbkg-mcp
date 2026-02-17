@@ -1,13 +1,13 @@
 # SBKG MCP — LLM Usage Guide
 
-This guide explains how an LLM should use the Second Brain Knowledge Graph
-(SBKG) MCP server to manage a personal knowledge graph.
+This guide explains how an LLM should use the SBKG MCP server to manage a
+personal knowledge graph.
 
 ## Overview
 
 SBKG stores **notes**, **bookmarks**, and **concepts** as RDF triples in an
 Oxigraph database. The graph is queryable via SPARQL and exposed through
-MCP tools. Think of it as a structured second brain that an LLM can read
+MCP tools. Think of it as a structured knowledge base that an LLM can read
 from and write to across conversations.
 
 ## Core Data Model
@@ -95,7 +95,7 @@ from and write to across conversations.
 ### Required Prefixes
 
 ```sparql
-PREFIX sbkg:    <http://secondbrain.ai/kg/>
+PREFIX sbkg:    <http://sb.ai/kg/>
 PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX doap:    <http://usefulinc.com/ns/doap#>
@@ -112,7 +112,7 @@ Prefixed names cannot contain `/`. Since SBKG URIs use paths like
 sbkg:bookmark/my-slug sbkg:title ?title .
 
 # CORRECT
-<http://secondbrain.ai/kg/bookmark/my-slug> sbkg:title ?title .
+<http://sb.ai/kg/bookmark/my-slug> sbkg:title ?title .
 ```
 
 This applies in `sbkg_query_sparql`, `sbkg_update_sparql`, and Turtle
@@ -123,7 +123,7 @@ fine with prefixes: `sbkg:Bookmark`, `sbkg:title`, `sbkg:hasTag`.
 
 **List all bookmarks:**
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title ?url WHERE {
   ?b a sbkg:Bookmark .
   ?b sbkg:title ?title .
@@ -133,7 +133,7 @@ SELECT ?title ?url WHERE {
 
 **Find bookmarks by tag:**
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title ?url WHERE {
   ?b a sbkg:Bookmark .
   ?b sbkg:hasTag ?tag .
@@ -145,7 +145,7 @@ SELECT ?title ?url WHERE {
 
 **Count bookmarks per tag:**
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?tag (COUNT(DISTINCT ?b) AS ?count) WHERE {
   ?b a sbkg:Bookmark .
   ?b sbkg:hasTag ?tagUri .
@@ -155,7 +155,7 @@ SELECT ?tag (COUNT(DISTINCT ?b) AS ?count) WHERE {
 
 **Search by content (FILTER + CONTAINS):**
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 SELECT ?title ?desc WHERE {
   ?b a sbkg:Bookmark .
   ?b sbkg:title ?title .
@@ -168,13 +168,13 @@ SELECT ?title ?desc WHERE {
 
 **Batch insert bookmarks:**
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 INSERT DATA {
-  <http://secondbrain.ai/kg/bookmark/example-1> a sbkg:Bookmark ;
+  <http://sb.ai/kg/bookmark/example-1> a sbkg:Bookmark ;
     sbkg:title "Example 1" ;
     sbkg:sourceUrl "https://example.com/1" ;
     sbkg:hasStatus sbkg:ToRead .
-  <http://secondbrain.ai/kg/bookmark/example-2> a sbkg:Bookmark ;
+  <http://sb.ai/kg/bookmark/example-2> a sbkg:Bookmark ;
     sbkg:title "Example 2" ;
     sbkg:sourceUrl "https://example.com/2" ;
     sbkg:hasStatus sbkg:ToRead .
@@ -183,7 +183,7 @@ INSERT DATA {
 
 **Rename a tag across all items:**
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 DELETE { ?concept sbkg:title "old-name" }
 INSERT { ?concept sbkg:title "new-name" }
 WHERE  { ?concept sbkg:title "old-name" }
@@ -191,11 +191,11 @@ WHERE  { ?concept sbkg:title "old-name" }
 
 **Add SKOS hierarchy between concepts:**
 ```sparql
-PREFIX sbkg: <http://secondbrain.ai/kg/>
+PREFIX sbkg: <http://sb.ai/kg/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 INSERT DATA {
-  <http://secondbrain.ai/kg/concept/react> skos:broader <http://secondbrain.ai/kg/concept/frontend> .
-  <http://secondbrain.ai/kg/concept/frontend> skos:narrower <http://secondbrain.ai/kg/concept/react> .
+  <http://sb.ai/kg/concept/react> skos:broader <http://sb.ai/kg/concept/frontend> .
+  <http://sb.ai/kg/concept/frontend> skos:narrower <http://sb.ai/kg/concept/react> .
 }
 ```
 
