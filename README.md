@@ -170,9 +170,36 @@ SELECT ?title ?url WHERE {
 }
 ```
 
+### Track a software project
+
+```
+User: Register my-app as a project — it's a Python web app on GitHub.
+
+LLM calls: sbkg_add_project(
+  name="my-app",
+  description="A web application for task management",
+  homepage="https://github.com/user/my-app",
+  repository="https://github.com/user/my-app.git",
+  programming_language="Python",
+  maintainers=["Jane Developer"],
+  tags=["python", "web"]
+)
+```
+
+This creates a DOAP project with repository, maintainer, and tag triples — no raw SPARQL needed.
+
 ### Multi-MCP workflow: Email to knowledge graph
 
-When SBKG is combined with an email MCP server (e.g. Gmail, Outlook), an LLM can extract knowledge from emails and store it:
+**Direct email ingestion** — if you have the raw email text, use `sbkg_add_note_from_email` for one-step parsing:
+
+```
+User: Add this email to my knowledge graph.
+
+LLM calls: sbkg_add_note_from_email(raw_email=email_content)
+  → Creates FleetingNote with sender as creator, recipients as mentions, "email" tag
+```
+
+**Synthesized notes** — when combining with an email MCP server (e.g. Gmail, Outlook), the LLM can summarize multiple emails into a single note:
 
 ```
 User: Check my recent emails about the conference and save
@@ -205,6 +232,8 @@ See [docs/examples.md](docs/examples.md) for more workflows including GitHub int
 |------|---------|----------------|
 | `sbkg_add_note` | Create a note with metadata and triples | title, content, note_type, tags, links, project, area, status |
 | `sbkg_add_bookmark` | Create a bookmark entry | title, url, description, tags, status |
+| `sbkg_add_project` | Register a DOAP software project | name, description, homepage, repository, programming_language, maintainers, developers, tags |
+| `sbkg_add_note_from_email` | Parse a raw email into a FleetingNote | raw_email |
 | `sbkg_extract_from_markdown` | Parse a local .md file into the graph | path |
 | `sbkg_bulk_import` | Bulk-load RDF from an in-memory string | data, format |
 | `sbkg_update_sparql` | Execute SPARQL UPDATE (INSERT/DELETE) | update |
@@ -213,6 +242,8 @@ See [docs/examples.md](docs/examples.md) for more workflows including GitHub int
 
 | Tool | Purpose | Key Parameters |
 |------|---------|----------------|
+| `sbkg_get_note` | Fetch all properties of a note by title | title |
+| `sbkg_search` | Search notes/bookmarks by title substring | query, entity_type, tag, limit |
 | `sbkg_query_sparql` | Run SPARQL SELECT/ASK/CONSTRUCT/DESCRIBE | sparql |
 | `sbkg_query_natural` | Get ontology context for natural language → SPARQL | question |
 | `sbkg_get_related_notes` | Find notes related via tags, links, project/area | title, max_results |
@@ -224,6 +255,7 @@ See [docs/examples.md](docs/examples.md) for more workflows including GitHub int
 
 | Tool | Purpose | Key Parameters |
 |------|---------|----------------|
+| `sbkg_update_note` | Update a note's fields (content, tags, status, etc.) | title, content, tags, status, project, area, links, note_type |
 | `sbkg_update_sparql` | SPARQL UPDATE for batch modify/delete/insert | update |
 | `sbkg_delete_note` | Delete a note and all its triples | title |
 | `sbkg_delete_bookmark` | Delete a bookmark and its triples | title |

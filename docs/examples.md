@@ -15,6 +15,7 @@ Extended examples of using sbkg-mcp, including multi-MCP server workflows.
   - [Calendar → Knowledge Graph](#calendar--knowledge-graph)
   - [Web Research Pipeline](#web-research-pipeline)
   - [Browser Bookmarks Import](#browser-bookmarks-import)
+- [Dublin Core Metadata on Notes](#dublin-core-metadata-on-notes)
 - [Advanced SPARQL](#advanced-sparql)
 
 ---
@@ -304,7 +305,29 @@ ORDER BY ?parentLabel ?childLabel
 
 ## Software Project Tracking with DOAP
 
-### Describe a software project
+### Register a project (recommended)
+
+Use `sbkg_add_project` for a one-step project creation with DOAP triples:
+
+```
+User: Register my-app as a project in the knowledge graph.
+
+LLM calls: sbkg_add_project(
+  name="my-app",
+  description="A web application for task management",
+  homepage="https://github.com/user/my-app",
+  repository="https://github.com/user/my-app.git",
+  programming_language="Python",
+  platform="Linux",
+  maintainers=["Jane Developer"],
+  tags=["python", "web"]
+)
+  → Creates doap:Project with repository, maintainer Person entities, and concept tags
+```
+
+### Advanced alternative: raw SPARQL
+
+For full control over URIs and additional DOAP properties, use SPARQL directly:
 
 ```
 LLM calls: sbkg_update_sparql("""
@@ -353,6 +376,32 @@ These examples show SBKG combined with other MCP servers. The LLM
 orchestrates data flow between servers using standard tool calls.
 
 ### Email → Knowledge Graph
+
+#### Direct email ingestion (simplest)
+
+If you have the raw email text (e.g. from an email MCP server or filesystem), use `sbkg_add_note_from_email` for one-step parsing:
+
+```
+User: Add this email to my knowledge graph.
+
+LLM calls: sbkg_add_note_from_email(raw_email="""
+From: alice@example.com
+To: bob@example.com
+Cc: carol@example.com
+Subject: Project kickoff meeting
+Date: Mon, 17 Feb 2026 10:00:00 -0500
+
+Hi team, here are the notes from our kickoff meeting...
+""")
+  → Creates FleetingNote with:
+    - Title: "Project kickoff meeting"
+    - Creator: alice@example.com (as foaf:Person)
+    - Mentions: bob@example.com, carol@example.com (as foaf:Person entities)
+    - Tag: "email"
+    - Content: email body text
+```
+
+#### Alternative: synthesized notes from multiple emails
 
 **Setup**: SBKG + Gmail/Outlook MCP server
 
@@ -552,6 +601,63 @@ Step 2 — LLM generates Turtle and bulk-imports:
 
     ... (more bookmarks)
   """, format="turtle")
+```
+
+---
+
+## Dublin Core Metadata on Notes
+
+Notes support Dublin Core properties via markdown frontmatter or direct tool parameters. These appear as `dcterms:*` triples in the graph.
+
+### Markdown frontmatter with DC fields
+
+```markdown
+---
+title: API Design Guidelines
+tags: [api, architecture]
+description: Best practices for RESTful API design
+creator: Jane Developer
+language: en
+license: CC-BY-4.0
+---
+
+All endpoints should use consistent naming conventions...
+```
+
+When parsed with `sbkg_extract_from_markdown`, this produces triples like:
+
+```turtle
+<http://sb.ai/kg/note/api-design-guidelines>
+  dcterms:description "Best practices for RESTful API design" ;
+  dcterms:creator <http://sb.ai/kg/person/jane-developer> ;
+  dcterms:language "en" ;
+  dcterms:license "CC-BY-4.0" .
+```
+
+### Query notes by creator
+
+```sparql
+PREFIX sbkg: <http://sb.ai/kg/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+SELECT ?title WHERE {
+  ?n a sbkg:Note .
+  ?n sbkg:title ?title .
+  ?n dcterms:creator ?person .
+  ?person foaf:name "Jane Developer" .
+}
+```
+
+### Query notes by language
+
+```sparql
+PREFIX sbkg: <http://sb.ai/kg/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?title ?lang WHERE {
+  ?n a sbkg:Note .
+  ?n sbkg:title ?title .
+  ?n dcterms:language ?lang .
+}
 ```
 
 ---

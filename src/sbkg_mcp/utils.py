@@ -6,6 +6,10 @@ from datetime import datetime, timezone
 
 
 SBKG_NS = "http://sb.ai/kg/"
+SKOS_NS = "http://www.w3.org/2004/02/skos/core#"
+DCTERMS_NS = "http://purl.org/dc/terms/"
+DOAP_NS = "http://usefulinc.com/ns/doap#"
+FOAF_NS = "http://xmlns.com/foaf/0.1/"
 
 
 def slugify(text: str) -> str:
@@ -41,6 +45,16 @@ def make_project_uri(name: str) -> str:
 def make_area_uri(name: str) -> str:
     """Generate a URI for an area."""
     return f"{SBKG_NS}area/{slugify(name)}"
+
+
+def make_person_uri(name: str) -> str:
+    """Generate a URI for a person."""
+    return f"{SBKG_NS}person/{slugify(name)}"
+
+
+def make_tool_uri(name: str) -> str:
+    """Generate a URI for a tool."""
+    return f"{SBKG_NS}tool/{slugify(name)}"
 
 
 def now_iso() -> str:

@@ -19,6 +19,7 @@ from and write to across conversations.
 | `sbkg:Concept` | `sbkg:concept/{slug}` | Tags/topics — aligned with `skos:Concept` for hierarchy |
 | `sbkg:Project` | `sbkg:project/{slug}` | Project groupings |
 | `sbkg:Area` | `sbkg:area/{slug}` | Areas of responsibility |
+| `foaf:Person` | `sbkg:person/{slug}` | People — email senders, project maintainers/developers |
 
 ### Key Properties
 
@@ -30,6 +31,10 @@ from and write to across conversations.
 - `sbkg:hasStatus` — bookmark status (ToRead, Reading, Read, Reference)
 - `sbkg:belongsToProject` / `sbkg:belongsToArea` — organizational links
 - `sbkg:createdAt` / `sbkg:modifiedAt` — timestamps (xsd:dateTime)
+- `sbkg:mentions` — links note → Person (e.g. email To/CC recipients)
+- `foaf:mbox` — email address on a Person (as `mailto:` URI, emitted from email ingestion)
+- `dcterms:description` / `dcterms:creator` / `dcterms:language` / `dcterms:license` — Dublin Core metadata on notes
+- `doap:name` / `doap:repository` / `doap:maintainer` / `doap:developer` / `doap:programming-language` — DOAP properties on projects
 
 ### Extended Vocabularies
 
@@ -59,6 +64,8 @@ from and write to across conversations.
 | Add a single note | `sbkg_add_note` | Handles slug generation, timestamps, tag creation |
 | Add a single bookmark | `sbkg_add_bookmark` | Same conveniences as add_note |
 | Ingest an existing .md file | `sbkg_extract_from_markdown` | Parses frontmatter + wikilinks automatically |
+| Register a software project | `sbkg_add_project` | Creates DOAP-backed project with repo, maintainers, language |
+| Ingest a raw email | `sbkg_add_note_from_email` | Parses RFC 2822 → FleetingNote with sender, recipients, tags |
 | Add many items at once | `sbkg_bulk_import` | Pass a Turtle or N-Triples string — fastest for batch creation |
 | Complex batch operations | `sbkg_update_sparql` | Use INSERT DATA for bulk inserts with full control over URIs and properties |
 
@@ -66,6 +73,8 @@ from and write to across conversations.
 
 | Scenario | Tool | Why |
 |----------|------|-----|
+| Fetch a note by title | `sbkg_get_note` | Returns all properties without writing SPARQL |
+| Search by title substring | `sbkg_search` | Case-insensitive search with optional type/tag filters |
 | Structured queries | `sbkg_query_sparql` | Full SPARQL SELECT, ASK, CONSTRUCT, DESCRIBE |
 | "What do I have about X?" | `sbkg_query_natural` → `sbkg_query_sparql` | Get ontology context first, then write SPARQL |
 | Find related notes | `sbkg_get_related_notes` | Finds connections via shared tags, links, project, area |
@@ -76,9 +85,10 @@ from and write to across conversations.
 
 | Scenario | Tool | Why |
 |----------|------|-----|
+| Update a note's fields | `sbkg_update_note` | Update content, tags, status, etc. without raw SPARQL |
 | Delete a note | `sbkg_delete_note` | Removes all triples (as subject and object) |
 | Delete a bookmark | `sbkg_delete_bookmark` | Same as above |
-| Rename, re-tag, or update | `sbkg_update_sparql` | Use DELETE/INSERT WHERE patterns |
+| Rename, re-tag, or update | `sbkg_update_sparql` | Use DELETE/INSERT WHERE patterns for complex updates |
 | Bulk re-tag | `sbkg_update_sparql` | Pattern-match and transform in one operation |
 | Full reset | `sbkg_clear_all` | Wipes everything, reloads ontology (requires confirm=True) |
 
@@ -153,6 +163,30 @@ SELECT ?tag (COUNT(DISTINCT ?b) AS ?count) WHERE {
 } GROUP BY ?tag ORDER BY DESC(?count)
 ```
 
+**Find all projects by programming language:**
+```sparql
+PREFIX doap: <http://usefulinc.com/ns/doap#>
+SELECT ?name ?desc WHERE {
+  ?p a doap:Project .
+  ?p doap:name ?name .
+  ?p doap:programming-language "Python" .
+  OPTIONAL { ?p doap:shortdesc ?desc }
+}
+```
+
+**Find notes from a specific person:**
+```sparql
+PREFIX sbkg: <http://sb.ai/kg/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+SELECT ?title WHERE {
+  ?n a sbkg:Note .
+  ?n sbkg:title ?title .
+  { ?n dcterms:creator ?person } UNION { ?n sbkg:mentions ?person }
+  ?person foaf:name "Jane Developer" .
+}
+```
+
 **Search by content (FILTER + CONTAINS):**
 ```sparql
 PREFIX sbkg: <http://sb.ai/kg/>
@@ -224,3 +258,22 @@ INSERT DATA {
 
 8. **Use `sbkg_get_ontology`** (format=summary) if you need a quick reminder
    of available classes, properties, and prefixes.
+
+9. **Use `sbkg_add_project`** for software project tracking instead of raw
+   SPARQL — it handles DOAP triples, repository, maintainers, and tags
+   automatically.
+
+10. **Use `sbkg_add_note_from_email`** for email ingestion instead of manual
+    note creation — it parses RFC 2822 headers, extracts sender/recipients as
+    `foaf:Person` entities with `foaf:mbox`, and auto-tags with "email".
+
+11. **Use `sbkg_get_note`** to fetch a note's full state before deciding what
+    to update — it resolves tags, links, and mentions without SPARQL.
+
+12. **Use `sbkg_update_note`** for simple field changes (content, tags, status)
+    instead of writing DELETE/INSERT SPARQL. Tags and links replace existing
+    sets; omitted fields keep their current values.
+
+13. **Use `sbkg_search`** for quick title-based lookups — it's faster and
+    simpler than writing SPARQL FILTER queries. Use the `entity_type` and
+    `tag` parameters to narrow results.

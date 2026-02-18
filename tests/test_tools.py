@@ -1,6 +1,7 @@
 """Tests for MCP tool functions."""
 
 import json
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -48,6 +49,29 @@ class TestAddBookmark:
         assert result["url"] == "https://example.com"
         assert result["status"] == "ToRead"
         assert result["triples_added"] > 0
+
+    def test_bookmark_uses_model(self):
+        """Verify bookmark uses the Bookmark model + extract_bookmark_triples."""
+        result = json.loads(srv.sbkg_add_bookmark(
+            "Model BM", "https://example.com",
+            tags=["test"],
+            status="Read",
+        ))
+        assert result["triples_added"] > 0
+        # Verify SKOS prefLabel was emitted (from extract_bookmark_triples)
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "
+            "SELECT ?label WHERE { ?c skos:prefLabel ?label }"
+        ))
+        labels = [r["label"] for r in sparql]
+        assert "test" in labels
+        # Verify status is a NamedNode
+        sparql2 = json.loads(srv.sbkg_query_sparql(
+            "PREFIX sbkg: <http://sb.ai/kg/> "
+            "SELECT ?status WHERE { <http://sb.ai/kg/bookmark/model-bm> sbkg:hasStatus ?status }"
+        ))
+        assert len(sparql2) == 1
+        assert sparql2[0]["status"] == "http://sb.ai/kg/Read"
 
 
 class TestExtractFromMarkdown:
@@ -290,3 +314,223 @@ class TestGetOntology:
     def test_turtle(self):
         result = json.loads(srv.sbkg_get_ontology(format="turtle"))
         assert "@prefix" in result["content"]
+
+
+class TestAddProject:
+    def test_basic(self):
+        result = json.loads(srv.sbkg_add_project("my-project"))
+        assert result["name"] == "my-project"
+        assert result["uri"].endswith("/project/my-project")
+        assert result["triples_added"] > 0
+
+    def test_with_doap_properties(self):
+        result = json.loads(srv.sbkg_add_project(
+            name="sbkg-mcp",
+            description="Knowledge graph MCP server",
+            homepage="https://example.com/sbkg",
+            repository="https://github.com/example/sbkg-mcp",
+            programming_language="Python",
+            platform="Linux",
+            maintainers=["Alice"],
+            developers=["Bob", "Charlie"],
+            tags=["python", "rdf"],
+        ))
+        assert result["triples_added"] > 0
+        # Verify DOAP name in store
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX doap: <http://usefulinc.com/ns/doap#> "
+            "SELECT ?name WHERE { ?p doap:name ?name }"
+        ))
+        names = [r["name"] for r in sparql]
+        assert "sbkg-mcp" in names
+        # Verify maintainer person
+        sparql2 = json.loads(srv.sbkg_query_sparql(
+            "PREFIX doap: <http://usefulinc.com/ns/doap#> "
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+            "SELECT ?name WHERE { ?p doap:maintainer ?m . ?m foaf:name ?name }"
+        ))
+        assert any(r["name"] == "Alice" for r in sparql2)
+
+    def test_repository_creates_git_repo(self):
+        srv.sbkg_add_project(
+            name="repo-test",
+            repository="https://github.com/test/repo",
+        )
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX doap: <http://usefulinc.com/ns/doap#> "
+            "SELECT ?loc WHERE { ?r a doap:GitRepository . ?r doap:location ?loc }"
+        ))
+        locs = [r["loc"] for r in sparql]
+        assert "https://github.com/test/repo" in locs
+
+
+class TestGetNote:
+    def test_existing_note(self):
+        srv.sbkg_add_note("Fetch Me", content="Hello world", tags=["test"])
+        result = json.loads(srv.sbkg_get_note("Fetch Me"))
+        assert result["found"] is True
+        assert result["title"] == "Fetch Me"
+        assert result["content"] == "Hello world"
+        assert "test" in result["tags"]
+
+    def test_nonexistent_note(self):
+        result = json.loads(srv.sbkg_get_note("Does Not Exist"))
+        assert result["found"] is False
+
+    def test_note_with_project_and_links(self):
+        srv.sbkg_add_note("Linked Note", project="my-project", links=["Target"])
+        result = json.loads(srv.sbkg_get_note("Linked Note"))
+        assert result["found"] is True
+        assert result["project_uri"] is not None
+        assert "my-project" in result["project_uri"]
+        assert len(result["links"]) == 1
+
+
+class TestUpdateNote:
+    def test_update_content(self):
+        srv.sbkg_add_note("Update Me", content="old")
+        result = json.loads(srv.sbkg_update_note("Update Me", content="new"))
+        assert result["updated"] is True
+        # Verify content changed
+        note = json.loads(srv.sbkg_get_note("Update Me"))
+        assert note["content"] == "new"
+
+    def test_update_tags(self):
+        srv.sbkg_add_note("Tag Note", tags=["old-tag"])
+        srv.sbkg_update_note("Tag Note", tags=["new-tag", "another"])
+        note = json.loads(srv.sbkg_get_note("Tag Note"))
+        assert "new-tag" in note["tags"]
+        assert "another" in note["tags"]
+        assert "old-tag" not in note["tags"]
+
+    def test_update_status(self):
+        srv.sbkg_add_note("Status Note", status="draft")
+        srv.sbkg_update_note("Status Note", status="published")
+        note = json.loads(srv.sbkg_get_note("Status Note"))
+        assert note["status"] == "published"
+
+    def test_update_nonexistent(self):
+        result = json.loads(srv.sbkg_update_note("Ghost Note", content="nope"))
+        assert result["updated"] is False
+
+    def test_modified_at_refresh(self):
+        srv.sbkg_add_note("Mod Note")
+        note_before = json.loads(srv.sbkg_get_note("Mod Note"))
+        srv.sbkg_update_note("Mod Note", content="changed")
+        note_after = json.loads(srv.sbkg_get_note("Mod Note"))
+        assert note_after["modified_at"] is not None
+        # modified_at should be set after update
+        assert note_after["modified_at"] != note_before.get("created_at")
+
+
+class TestSearch:
+    def test_basic_search(self):
+        srv.sbkg_add_note("Python Tutorial")
+        srv.sbkg_add_note("Rust Guide")
+        result = json.loads(srv.sbkg_search("Python"))
+        titles = [r["title"] for r in result]
+        assert "Python Tutorial" in titles
+        assert "Rust Guide" not in titles
+
+    def test_case_insensitive(self):
+        srv.sbkg_add_note("Case Test Note")
+        result = json.loads(srv.sbkg_search("case test"))
+        assert len(result) > 0
+        assert result[0]["title"] == "Case Test Note"
+
+    def test_filter_by_type_note(self):
+        srv.sbkg_add_note("Search Note")
+        srv.sbkg_add_bookmark("Search Bookmark", "https://example.com")
+        result = json.loads(srv.sbkg_search("Search", entity_type="note"))
+        titles = [r["title"] for r in result]
+        assert "Search Note" in titles
+        assert "Search Bookmark" not in titles
+
+    def test_filter_by_type_bookmark(self):
+        srv.sbkg_add_note("Filter Note")
+        srv.sbkg_add_bookmark("Filter Bookmark", "https://example.com")
+        result = json.loads(srv.sbkg_search("Filter", entity_type="bookmark"))
+        titles = [r["title"] for r in result]
+        assert "Filter Bookmark" in titles
+        assert "Filter Note" not in titles
+
+    def test_filter_by_tag(self):
+        srv.sbkg_add_note("Tagged A", tags=["target"])
+        srv.sbkg_add_note("Tagged B", tags=["other"])
+        result = json.loads(srv.sbkg_search("Tagged", tag="target"))
+        titles = [r["title"] for r in result]
+        assert "Tagged A" in titles
+        assert "Tagged B" not in titles
+
+    def test_no_results(self):
+        result = json.loads(srv.sbkg_search("zzzznonexistentzzzz"))
+        assert result == []
+
+    def test_limit(self):
+        for i in range(5):
+            srv.sbkg_add_note(f"Limit Note {i}")
+        result = json.loads(srv.sbkg_search("Limit Note", limit=3))
+        assert len(result) <= 3
+
+
+class TestEmailMboxTriples:
+    def test_email_mbox_end_to_end(self):
+        """End-to-end: email → foaf:mbox triples in store."""
+        raw = textwrap.dedent("""\
+            From: Alice Smith <alice@example.com>
+            To: Bob Jones <bob@example.com>
+            Subject: Mbox E2E Test
+
+            Body content.
+        """)
+        srv.sbkg_add_note_from_email(raw)
+        # Verify foaf:mbox for mention
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+            "SELECT ?mbox WHERE { ?p foaf:name \"Bob Jones\" . ?p foaf:mbox ?mbox }"
+        ))
+        assert len(sparql) > 0
+        assert sparql[0]["mbox"] == "mailto:bob@example.com"
+        # Verify foaf:mbox for creator
+        sparql2 = json.loads(srv.sbkg_query_sparql(
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+            "SELECT ?mbox WHERE { ?p foaf:name \"Alice Smith\" . ?p foaf:mbox ?mbox }"
+        ))
+        assert len(sparql2) > 0
+        assert sparql2[0]["mbox"] == "mailto:alice@example.com"
+
+
+class TestAddNoteFromEmail:
+    def test_basic_email(self):
+        raw = textwrap.dedent("""\
+            From: Alice Smith <alice@example.com>
+            To: Bob Jones <bob@example.com>
+            Subject: Meeting Notes
+            Date: Mon, 15 Jan 2024 10:30:00 +0000
+
+            Here are the notes from today's meeting.
+        """)
+        result = json.loads(srv.sbkg_add_note_from_email(raw))
+        assert result["title"] == "Meeting Notes"
+        assert result["creator"] == "Alice Smith"
+        assert "email" in result["tags"]
+        assert result["triples_added"] > 0
+
+    def test_email_creates_mentions(self):
+        raw = textwrap.dedent("""\
+            From: Alice <alice@example.com>
+            To: Bob <bob@example.com>, Charlie <charlie@example.com>
+            Subject: Team Update
+
+            Update body.
+        """)
+        srv.sbkg_add_note_from_email(raw)
+        # Verify mentions in store
+        sparql = json.loads(srv.sbkg_query_sparql(
+            "PREFIX sbkg: <http://sb.ai/kg/> "
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+            "SELECT ?name WHERE { ?n sbkg:mentions ?p . ?p foaf:name ?name }"
+        ))
+        names = [r["name"] for r in sparql]
+        assert "Bob" in names
+        assert "Charlie" in names
